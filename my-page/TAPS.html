@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes, viewport-fit=cover">
+  <title>塔罗·咒语织坊</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      font-family: system-ui, 'Segoe UI', 'Noto Sans', 'Helvetica Neue', sans-serif;
+    }
+    body {
+      background: #f5efe8;
+      padding: 20px 12px;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+    }
+    .app-container {
+      max-width: 1000px;
+      width: 100%;
+      background: rgba(255, 255, 245, 0.85);
+      backdrop-filter: blur(5px);
+      border-radius: 36px;
+      box-shadow: 0 15px 35px rgba(0, 0, 0, 0.12);
+      padding: 24px 18px;
+      border: 1px solid #dacbb8;
+    }
+    h1 {
+      font-size: 2.2rem;
+      font-weight: 400;
+      letter-spacing: 5px;
+      color: #3a2c1b;
+      margin-bottom: 6px;
+      border-bottom: 2px solid #b7a48b;
+      display: inline-block;
+      padding-bottom: 6px;
+    }
+    .sub {
+      color: #5f4e3a;
+      margin-bottom: 28px;
+      font-style: italic;
+      font-size: 1rem;
+    }
+    .config-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 24px 40px;
+      align-items: flex-end;
+      margin-bottom: 20px;
+    }
+    .config-item {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      position: relative;
+    }
+    .config-item label {
+      font-weight: 600;
+      color: #4d3e2c;
+      font-size: 0.9rem;
+      letter-spacing: 0.5px;
+    }
+    .spread-name-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .spread-name-wrapper input {
+      flex: 1;
+      background: #fffbf5;
+      border: 1px solid #c9b69e;
+      border-radius: 40px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      transition: 0.2s;
+      width: 200px;
+    }
+    .dropdown-btn {
+      background: #e7dbce;
+      border: 1px solid #b7a187;
+      border-radius: 40px;
+      width: 44px;
+      height: 44px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.5rem;
+      color: #4d3e2c;
+      transition: 0.15s;
+      flex-shrink: 0;
+    }
+    .template-menu {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      background: #fbf3ea;
+      border: 1px solid #bba58e;
+      border-radius: 20px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+      z-index: 50;
+      min-width: 200px;
+      max-height: 260px;
+      overflow-y: auto;
+      display: none;
+      margin-top: 6px;
+    }
+    .template-menu-item {
+      padding: 12px 18px;
+      border-bottom: 1px solid #e1d2c2;
+      cursor: pointer;
+      font-size: 0.95rem;
+      color: #3a2c1b;
+      display: flex;
+      justify-content: space-between;
+    }
+    .template-menu-item:last-child { border-bottom: none; }
+    .template-menu-item:hover { background: #e9dbce; }
+    .manage-templates-btn {
+      padding: 10px;
+      text-align: center;
+      color: #5b4a37;
+      font-weight: 500;
+      border-top: 1px solid #d6c3b0;
+      cursor: pointer;
+    }
+    .config-item input, .config-item textarea {
+      background: #fffbf5;
+      border: 1px solid #c9b69e;
+      border-radius: 40px;
+      padding: 12px 18px;
+      font-size: 1rem;
+      width: 220px;
+      transition: 0.2s;
+      font-family: inherit;
+    }
+    .cards-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin: 30px 0 28px;
+    }
+    .card-row {
+      background: #ede3d7;
+      border-radius: 48px;
+      padding: 14px 18px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 10px 14px;
+      box-shadow: inset 0 1px 3px #fff8, 0 4px 6px rgba(0,0,0,0.03);
+      border: 1px solid #d6c4b2;
+    }
+    .row-index {
+      font-weight: 700;
+      color: #5b3f26;
+      background: #f3ede5;
+      width: 38px;
+      height: 38px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 60%;
+      font-size: 1.2rem;
+    }
+    .card-selector-area { flex: 2 1 220px; min-width: 190px; }
+    .select-btn {
+      background: #fcf7f0;
+      border: 1px solid #b7a187;
+      border-radius: 60px;
+      padding: 12px 18px;
+      width: 100%;
+      text-align: left;
+      font-size: 0.98rem;
+      color: #2e241a;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      white-space: nowrap;
+    }
+    .select-btn .placeholder { color: #7e6b58; overflow: hidden; text-overflow: ellipsis; }
+    .select-btn .arrow { font-size: 1.3rem; color: #7f6240; margin-left: 8px; }
+
+    .flip-toggle-btn {
+      background: #dccfbf;
+      border: 1px solid #b7a187;
+      border-radius: 60px;
+      padding: 10px 18px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #3f3222;
+      cursor: pointer;
+      transition: 0.15s;
+      min-width: 90px;
+      text-align: center;
+      white-space: nowrap;
+      box-shadow: inset 0 1px 2px #fff3;
+    }
+    .flip-toggle-btn.reversed {
+      background: #2e241a;
+      color: #f1e7dc;
+      border-color: #1f170f;
+    }
+
+    .note-input { flex: 3 1 180px; min-width: 160px; }
+    .note-input input {
+      width: 100%;
+      background: #fffbf5;
+      border: 1px solid #cbbaa8;
+      border-radius: 60px;
+      padding: 12px 18px;
+      font-size: 0.95rem;
+    }
+    .prompt-section {
+      margin-top: 30px;
+      background: #e2d5c7;
+      border-radius: 28px;
+      padding: 22px 22px;
+      border: 1px solid #bfaa95;
+    }
+    .prompt-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .copy-btn {
+      background: #5b4a37;
+      border: none;
+      color: #f0e3d6;
+      padding: 10px 22px;
+      border-radius: 60px;
+      font-weight: 500;
+      cursor: pointer;
+      border: 1px solid #3f3222;
+    }
+    .prompt-box {
+      background: #1e1a15;
+      color: #efe2d3;
+      padding: 20px 22px;
+      border-radius: 24px;
+      font-family: monospace;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-break: break-word;
+      border: 1px solid #9f8b78;
+      max-height: 280px;
+      overflow-y: auto;
+    }
+    .well-container { margin-bottom: 20px; }
+    .well-label { display: flex; gap: 8px; margin-bottom: 8px; font-weight: 600; }
+    .well-textarea {
+      width: 100%;
+      background: #fffbf5;
+      border: 1px solid #c9b69e;
+      border-radius: 28px;
+      padding: 16px 20px;
+      resize: vertical;
+      min-height: 90px;
+    }
+
+    /* 重置按钮 */
+    .reset-btn {
+      background: #d9c6b4;
+      border: 1px solid #b7a187;
+      border-radius: 40px;
+      padding: 12px 24px;
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #3a2c1b;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+      margin-left: auto;
+    }
+    .reset-btn:hover { background: #c9b19b; }
+
+    /* 模态框 */
+    .modal-overlay {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(30,22,16,0.5); backdrop-filter: blur(4px);
+      display: none; justify-content: center; align-items: center; z-index: 1000; padding: 12px;
+    }
+    .modal-card {
+      background: #fbf3ea;
+      width: 100%;
+      max-width: 700px;
+      height: 85vh;
+      border-radius: 36px;
+      border: 1px solid #bba58e;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .modal-header {
+      padding: 20px 24px 12px; display: flex; justify-content: space-between; border-bottom: 1px solid #d6c3b0;
+      flex-shrink: 0;
+    }
+    .close-modal { font-size: 34px; background: none; border: none; cursor: pointer; color: #5d4a35; }
+    .filter-bar { padding: 16px 20px 8px; display: flex; flex-wrap: wrap; gap: 10px; flex-shrink: 0; }
+    .search-input { flex: 3 1 200px; padding: 12px; border-radius: 48px; border: 1px solid #bbaa98; }
+    .filter-select, .number-filter { padding: 11px 16px; border-radius: 48px; border: 1px solid #bbaa98; }
+    .card-list {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding: 8px 20px 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+      gap: 10px;
+      align-content: start;
+    }
+    .card-option {
+      background: #ede0d3;
+      border: 1px solid #cdb7a2;
+      border-radius: 40px;
+      height: 80px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      padding: 8px 8px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .modal-footer { padding: 12px 24px 20px; display: flex; justify-content: space-between; flex-shrink: 0; }
+    .clear-card-btn { background: none; border: 1px solid #b7a187; padding: 8px 20px; border-radius: 60px; cursor: pointer; }
+
+    /* 模板管理 */
+    .template-toolbar {
+      padding: 12px 20px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px 10px;
+      border-bottom: 1px solid #e1d2c2;
+      flex-shrink: 0;
+    }
+    .template-toolbar button,
+    .template-toolbar .file-label {
+      background: #e7dbce;
+      border: 1px solid #b7a187;
+      border-radius: 40px;
+      padding: 10px 16px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #3a2c1b;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+      flex-shrink: 0;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .template-modal-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 8px 4px 8px 0;
+    }
+    .template-list { padding: 16px; }
+    .template-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 14px 12px;
+      border-bottom: 1px solid #ddd;
+      background: #fbf3ea;
+      border-radius: 30px;
+      margin-bottom: 8px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .template-actions { display: flex; gap: 6px; }
+    .template-actions button {
+      background: none;
+      border: 1px solid #b7a187;
+      border-radius: 30px;
+      padding: 6px 14px;
+      font-size: 1rem;
+      cursor: pointer;
+      color: #4d3e2c;
+    }
+    .edit-template-area {
+      padding: 20px 16px;
+      overflow-y: auto;
+      max-height: 100%;
+    }
+    .edit-field { margin-bottom: 18px; }
+    .edit-field label {
+      display: block;
+      margin-bottom: 6px;
+      font-weight: 600;
+      color: #4d3e2c;
+    }
+    .edit-field input {
+      width: 100%;
+      padding: 14px 18px;
+      border-radius: 40px;
+      border: 1px solid #c9b69e;
+      background: #fffbf5;
+      font-size: 1rem;
+    }
+    .meanings-editor {
+      background: #f3ede5;
+      border-radius: 28px;
+      padding: 16px 14px;
+      margin-top: 8px;
+    }
+    .meaning-row {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+      align-items: center;
+    }
+    .meaning-row span { min-width: 50px; font-weight: 500; color: #5b3f26; }
+    .meaning-row input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 40px;
+      border: 1px solid #cbbaa8;
+      background: #fffbf5;
+    }
+    .btn-group {
+      display: flex;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    .btn-group button {
+      flex: 1;
+      background: #dccfbf;
+      border: 1px solid #b7a187;
+      border-radius: 60px;
+      padding: 14px 0;
+      font-weight: 600;
+      font-size: 1rem;
+      color: #2e241a;
+      cursor: pointer;
+    }
+    .btn-group button.primary {
+      background: #5b4a37;
+      border-color: #3f3222;
+      color: #f0e3d6;
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <h1>🔮 塔罗·咒语织坊</h1>
+  <div class="sub">亲民科技・编织对塔罗牌面的ai解读提示词</div>
+
+  <div class="config-row">
+    <div class="config-item" style="position:relative;">
+      <label>📜 牌阵名称</label>
+      <div class="spread-name-wrapper">
+        <input type="text" id="spreadName" placeholder="例如：凯尔特十字" value="三牌阵">
+        <button class="dropdown-btn" id="templateDropdownBtn">▼</button>
+      </div>
+      <div class="template-menu" id="templateMenu"></div>
+    </div>
+    <div class="config-item">
+      <label>🫳 抽取张数 (1-78)</label>
+      <input type="number" id="cardCount" min="1" max="78" value="3" step="1" placeholder="填入牌阵的牌数">
+    </div>
+    <button class="reset-btn" id="fullResetBtn">🔄 一键重置</button>
+  </div>
+
+  <div class="well-container">
+    <div class="well-label"><span>🕳️ 倾诉之井</span><span style="font-weight:normal;">（你的心事、问题）</span></div>
+    <textarea id="wellInput" class="well-textarea" placeholder="例如：最近工作变动……"></textarea>
+  </div>
+
+  <div id="cardsContainer" class="cards-grid"></div>
+
+  <div class="prompt-section">
+    <div class="prompt-header"><h3>✨ AI 提示词</h3><button class="copy-btn" id="copyPromptBtn">📋 复制</button></div>
+    <div class="prompt-box" id="promptOutput">正在倾听……</div>
+  </div>
+</div>
+
+<!-- 选牌模态框 -->
+<div class="modal-overlay" id="cardModal">
+  <div class="modal-card">
+    <div class="modal-header"><h2>🃠 选择塔罗牌</h2><button class="close-modal" id="closeModalBtn">&times;</button></div>
+    <div class="filter-bar">
+      <input type="text" id="searchInput" class="search-input" placeholder="🔍 中/英/首字母/数字…" autocomplete="off">
+      <select id="categoryFilter" class="filter-select"><option value="all">全部</option><option value="major">大阿卡那</option><option value="swords">宝剑</option><option value="wands">权杖</option><option value="cups">圣杯</option><option value="pentacles">星币</option></select>
+      <input type="number" id="numberFilter" class="number-filter" placeholder="数字" min="0" max="21">
+    </div>
+    <div id="modalCardList" class="card-list"></div>
+    <div class="modal-footer"><button class="clear-card-btn" id="clearCurrentCardBtn">✕ 清除此牌</button><span>点击卡片选中</span></div>
+  </div>
+</div>
+
+<!-- 模板管理模态框 -->
+<div class="modal-overlay" id="templateModal">
+  <div class="modal-card" style="display: flex; flex-direction: column;">
+    <div class="modal-header"><h2>📚 牌阵模板库</h2><button class="close-modal" id="closeTemplateModal">&times;</button></div>
+    <div class="template-toolbar">
+      <button id="newTemplateBtn">➕ 新建</button>
+      <button id="exportAllBtn">💾 导出全部</button>
+      <label for="importFileInput" class="file-label">📂 导入</label>
+      <input type="file" id="importFileInput" accept=".json,text/plain,application/json" style="display:none;">
+    </div>
+    <div class="template-modal-body">
+      <div id="templateListContainer" class="template-list"></div>
+      <div id="templateEditPanel" class="edit-template-area" style="display:none;"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  (function(){
+    "use strict";
+
+    // ---------- 拼音首字母映射表 ----------
+    const pinyinMap = {
+      "愚者": "yz", "魔术师": "mss", "女祭司": "njs", "皇后": "hh", "皇帝": "hd", "教皇": "jh",
+      "恋人": "lr", "战车": "zc", "力量": "ll", "隐士": "ys", "命运之轮": "myzl", "正义": "zy",
+      "倒吊人": "ddr", "死神": "ss", "节制": "jz", "恶魔": "em", "高塔": "gt", "星星": "xx",
+      "月亮": "yl", "太阳": "ty", "审判": "sp", "世界": "sj",
+      "宝剑一": "bjy", "宝剑二": "bje", "宝剑三": "bjs", "宝剑四": "bjss", "宝剑五": "bjw", "宝剑六": "bjl",
+      "宝剑七": "bjq", "宝剑八": "bjb", "宝剑九": "bjj", "宝剑十": "bjs", "宝剑侍从": "bjsc", "宝剑骑士": "bjqs",
+      "宝剑皇后": "bjhh", "宝剑国王": "bjgw",
+      "权杖一": "qzy", "权杖二": "qze", "权杖三": "qzs", "权杖四": "qzss", "权杖五": "qzw", "权杖六": "qzl",
+      "权杖七": "qzq", "权杖八": "qzb", "权杖九": "qzj", "权杖十": "qzs", "权杖侍从": "qzsc", "权杖骑士": "qzqs",
+      "权杖皇后": "qzhh", "权杖国王": "qzgw",
+      "圣杯一": "sby", "圣杯二": "sbe", "圣杯三": "sbs", "圣杯四": "sbss", "圣杯五": "sbw", "圣杯六": "sbl",
+      "圣杯七": "sbq", "圣杯八": "sbb", "圣杯九": "sbj", "圣杯十": "sbs", "圣杯侍从": "sbsc", "圣杯骑士": "sbqs",
+      "圣杯皇后": "sbhh", "圣杯国王": "sbgw",
+      "星币一": "xby", "星币二": "xbe", "星币三": "xbs", "星币四": "xbss", "星币五": "xbw", "星币六": "xbl",
+      "星币七": "xbq", "星币八": "xbb", "星币九": "xbj", "星币十": "xbs", "星币侍从": "xbsc", "星币骑士": "xbqs",
+      "星币皇后": "xbhh", "星币国王": "xbgw"
+    };
+    function getPinyin(chineseName) { return pinyinMap[chineseName] || ''; }
+
+    // 构建塔罗牌
+    const tarotDeck = [];
+    const majorArcana = [
+      { num:0, ch:"愚者", en:"The Fool" },{ num:1, ch:"魔术师", en:"The Magician" },{ num:2, ch:"女祭司", en:"The High Priestess" },
+      { num:3, ch:"皇后", en:"The Empress" },{ num:4, ch:"皇帝", en:"The Emperor" },{ num:5, ch:"教皇", en:"The Hierophant" },
+      { num:6, ch:"恋人", en:"The Lovers" },{ num:7, ch:"战车", en:"The Chariot" },{ num:8, ch:"力量", en:"Strength" },
+      { num:9, ch:"隐士", en:"The Hermit" },{ num:10, ch:"命运之轮", en:"Wheel of Fortune" },{ num:11, ch:"正义", en:"Justice" },
+      { num:12, ch:"倒吊人", en:"The Hanged Man" },{ num:13, ch:"死神", en:"Death" },{ num:14, ch:"节制", en:"Temperance" },
+      { num:15, ch:"恶魔", en:"The Devil" },{ num:16, ch:"高塔", en:"The Tower" },{ num:17, ch:"星星", en:"The Star" },
+      { num:18, ch:"月亮", en:"The Moon" },{ num:19, ch:"太阳", en:"The Sun" },{ num:20, ch:"审判", en:"Judgement" },{ num:21, ch:"世界", en:"The World" }
+    ];
+    majorArcana.forEach(c => tarotDeck.push({...c, uid:`major-${c.num}`, type:'major', suit:null, rankNum:c.num, py: getPinyin(c.ch) }));
+    const suits = [{name:'swords',chSuit:'宝剑'},{name:'wands',chSuit:'权杖'},{name:'cups',chSuit:'圣杯'},{name:'pentacles',chSuit:'星币'}];
+    const rankMap = [{rank:'ace',num:1,ch:'一',en:'Ace'},{rank:'two',num:2,ch:'二',en:'Two'},{rank:'three',num:3,ch:'三',en:'Three'},{rank:'four',num:4,ch:'四',en:'Four'},{rank:'five',num:5,ch:'五',en:'Five'},{rank:'six',num:6,ch:'六',en:'Six'},{rank:'seven',num:7,ch:'七',en:'Seven'},{rank:'eight',num:8,ch:'八',en:'Eight'},{rank:'nine',num:9,ch:'九',en:'Nine'},{rank:'ten',num:10,ch:'十',en:'Ten'},{rank:'page',num:null,ch:'侍从',en:'Page'},{rank:'knight',num:null,ch:'骑士',en:'Knight'},{rank:'queen',num:null,ch:'皇后',en:'Queen'},{rank:'king',num:null,ch:'国王',en:'King'}];
+    suits.forEach(s=> rankMap.forEach(r=> { const ch=`${s.chSuit}${r.ch}`; tarotDeck.push({uid:`${s.name}-${r.rank}`,ch,en:`${r.en} of ${s.name}`,py: getPinyin(ch),type:s.name,suit:s.name,rankNum:r.num,num:r.num,isCourt:r.num===null}); }));
+
+    // 预设模板
+    const PRESET_TEMPLATE = {
+      name: "村纱·锚心七位阵",
+      cardCount: 7,
+      meanings: [
+        "锚冠（Anchor Crown），此牌代表事情本身的核心本质。请解读这张牌所揭示的事件总体性质、关键矛盾或最终目标。它如同锚的最厚重的尖部，统摄全局。重点分析：这件事是机遇还是挑战？其根本动力来自哪里？",
+        "左锚掌（Left Fluke），此牌与3号位（右锚掌）共同构成事情的平衡因素。请解读这张牌所代表的某一侧力量（如内在因素、隐性条件、情感倾向）。并在解读完2、3号位后，明确比较两张牌的“分量与意义相似度”：若高度相似，说明此事性质稳定、方向明确；若差异显著，则意味着事情复杂、矛盾交织或需多方权衡。",
+        "右锚掌（Right Fluke），此牌与2号位（左锚掌）共同构成事情的平衡因素。请解读这张牌所代表的另一侧力量（如外在环境、显性规则、理性判断）。在解读时，务必与2号位的分析进行对比，评估两张牌的相似或互补程度，从而判断事件整体的稳定与复杂程度。",
+        "锚杆孔（Stock Hole），此牌代表事情中个人可控性的整体观。锚杆孔是连接横杆与锚的关键节点，象征在事件中能够主动把握的范围、决策自由度以及可调用的资源。请解读：哪些层面您可以自主决定？哪些环节存在限制？这张牌暗示您应聚焦于哪个可控点。",
+        "锚杆左端（Left Shank End），此牌与6号位（锚杆右端）共同代表个人所能发挥的作用。请解读这张牌所体现的您的某一类能力、行动倾向或内在驱动力。解读完5、6号位后，必须比较两张牌的相似度：若牌意接近，说明您对事情的掌控力强、行动协调；若差异明显，则意味着掌控力薄弱，需警惕自我矛盾或外部干扰。",
+        "锚杆右端（Right Shank End），此牌与5号位（锚杆左端）共同代表个人所能发挥的作用。请解读这张牌所体现的您的另一类能力、外部行动或实际策略。务必与5号位结论对比，评估两张牌是否相辅相成或相互冲突，以此判断您介入事件的整体效能。",
+        "锚卸扣（Anchor Shackle），此牌代表事情受宏观趋势的掌控力。卸扣是锚与锚链的连接件，象征超越个人的时代浪潮、政策、经济周期或集体潜意识等不可抗力量。请解读：外界大势对这件事是推动、压制还是转折？应顺势而为还是逆势抵抗？"
+      ]
+    };
+
+    // 初始化模板库
+    let templates = JSON.parse(localStorage.getItem('tarot_templates') || '[]');
+    if (templates.length === 0) {
+      templates.push(PRESET_TEMPLATE);
+      localStorage.setItem('tarot_templates', JSON.stringify(templates));
+    }
+    function saveTemplates() { localStorage.setItem('tarot_templates', JSON.stringify(templates)); }
+
+    // 全局状态
+    let cardsData = [], selectedUids = new Set(), currentCardCount = 3;
+    const spreadInput = document.getElementById('spreadName');
+    const countInput = document.getElementById('cardCount');
+    const wellInput = document.getElementById('wellInput');
+    const promptOutput = document.getElementById('promptOutput');
+    const container = document.getElementById('cardsContainer');
+    
+    const templateMenu = document.getElementById('templateMenu');
+    const dropdownBtn = document.getElementById('templateDropdownBtn');
+    const templateModal = document.getElementById('templateModal');
+    const templateListDiv = document.getElementById('templateListContainer');
+    const editPanel = document.getElementById('templateEditPanel');
+
+    // 牌数调整
+    function applyCardCountChange(newCount) {
+      newCount = Math.min(78, Math.max(1, newCount));
+      if (newCount === cardsData.length) { currentCardCount = newCount; countInput.value = newCount; return; }
+      if (newCount > cardsData.length) {
+        for (let i = cardsData.length; i < newCount; i++) cardsData.push({ card: null, reversed: false, note: '' });
+      } else {
+        const removed = cardsData.splice(newCount);
+        removed.forEach(item => { if (item.card) selectedUids.delete(item.card.uid); });
+      }
+      currentCardCount = newCount; countInput.value = newCount;
+      renderAllRows(); generatePrompt();
+    }
+
+    function resetCardsData(count) {
+      selectedUids.clear(); cardsData = [];
+      for (let i = 0; i < count; i++) cardsData.push({ card: null, reversed: false, note: '' });
+      currentCardCount = count; countInput.value = count;
+      renderAllRows(); generatePrompt();
+    }
+
+    function renderAllRows() {
+      let html = '';
+      for (let i = 0; i < cardsData.length; i++) {
+        const data = cardsData[i], card = data.card;
+        const displayName = card ? `${card.ch} (${card.en})` : '点击选择塔罗牌';
+        const flipText = data.reversed ? '逆位 ↓' : '正位 ↑';
+        const flipClass = data.reversed ? 'reversed' : '';
+        html += `
+          <div class="card-row" data-index="${i}">
+            <div class="row-index">${i+1}</div>
+            <div class="card-selector-area">
+              <button class="select-btn" data-action="select" data-index="${i}">
+                <span class="placeholder">${displayName}</span>
+                <span class="arrow">▼</span>
+              </button>
+            </div>
+            <button class="flip-toggle-btn ${flipClass}" data-action="flip" data-index="${i}">${flipText}</button>
+            <div class="note-input">
+              <input type="text" placeholder="这张牌代表…" value="${data.note || ''}" data-action="note" data-index="${i}">
+            </div>
+          </div>
+        `;
+      }
+      container.innerHTML = html;
+      
+      container.querySelectorAll('.select-btn').forEach(btn => {
+        btn.addEventListener('click', () => { const idx = btn.dataset.index; if (idx !== undefined) openModal(parseInt(idx)); });
+      });
+      container.querySelectorAll('.flip-toggle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const idx = btn.dataset.index;
+          if (idx !== undefined) {
+            cardsData[idx].reversed = !cardsData[idx].reversed;
+            updateSingleRowUI(idx);
+            generatePrompt();
+          }
+        });
+      });
+      container.querySelectorAll('.note-input input').forEach(input => {
+        input.addEventListener('input', (e) => { const idx = input.dataset.index; if (idx !== undefined) { cardsData[idx].note = input.value; generatePrompt(); } });
+      });
+    }
+
+    function updateSingleRowUI(index) {
+      const rows = document.querySelectorAll('.card-row');
+      if (index >= rows.length) return;
+      const row = rows[index], data = cardsData[index];
+      const selectBtn = row.querySelector('.select-btn .placeholder');
+      const flipBtn = row.querySelector('.flip-toggle-btn');
+      const noteInput = row.querySelector('.note-input input');
+      if (data.card) selectBtn.textContent = `${data.card.ch} (${data.card.en})`;
+      else selectBtn.textContent = '点击选择塔罗牌';
+      flipBtn.textContent = data.reversed ? '逆位 ↓' : '正位 ↑';
+      flipBtn.classList.toggle('reversed', data.reversed);
+      if (noteInput) noteInput.value = data.note || '';
+    }
+
+    function handleCountBlurOrEnter() {
+      let rawValue = countInput.value.trim();
+      if (rawValue === '') { countInput.value = currentCardCount; return; }
+      let newCount = parseInt(rawValue, 10);
+      if (isNaN(newCount) || newCount < 1 || newCount > 78) countInput.value = currentCardCount;
+      else applyCardCountChange(newCount);
+    }
+
+    // 一键重置
+    function fullReset() {
+      spreadInput.value = '';
+      wellInput.value = '';
+      resetCardsData(3);
+    }
+
+    // 选牌模态
+    const modalOverlay = document.getElementById('cardModal');
+    const searchInput = document.getElementById('searchInput');
+    const categoryFilter = document.getElementById('categoryFilter');
+    const numberFilter = document.getElementById('numberFilter');
+    const modalListDiv = document.getElementById('modalCardList');
+    let activeRowIndex = 0;
+
+    function filterCards() {
+      const keyword = searchInput.value.trim().toLowerCase();
+      const cat = categoryFilter.value, numVal = numberFilter.value;
+      let filtered = tarotDeck.filter(card => {
+        if (cat === 'major' && card.type !== 'major') return false;
+        if (cat === 'swords' && card.suit !== 'swords') return false;
+        if (cat === 'wands' && card.suit !== 'wands') return false;
+        if (cat === 'cups' && card.suit !== 'cups') return false;
+        if (cat === 'pentacles' && card.suit !== 'pentacles') return false;
+        if (numVal !== '') { const n = parseInt(numVal,10); if (!isNaN(n) && card.rankNum !== n && card.num !== n) return false; }
+        if (keyword === '') return true;
+        return card.ch.toLowerCase().includes(keyword) || card.en.toLowerCase().includes(keyword) || card.py.toLowerCase().includes(keyword) || String(card.rankNum||'').includes(keyword);
+      });
+      return filtered.filter(card => !selectedUids.has(card.uid));
+    }
+
+    function renderModalList() {
+      const filtered = filterCards();
+      modalListDiv.innerHTML = '';
+      if (filtered.length === 0) { modalListDiv.innerHTML = '<div style="grid-column:1/-1; text-align:center; padding:30px;">无牌回应</div>'; return; }
+      filtered.forEach(card => {
+        const div = document.createElement('div'); div.className = 'card-option';
+        div.innerHTML = `${card.ch}<br><small>${card.en}</small>`;
+        div.addEventListener('click', () => {
+          const rowData = cardsData[activeRowIndex];
+          if (rowData.card) selectedUids.delete(rowData.card.uid);
+          selectedUids.add(card.uid); rowData.card = card;
+          updateSingleRowUI(activeRowIndex); generatePrompt(); closeModal();
+        });
+        modalListDiv.appendChild(div);
+      });
+    }
+
+    function openModal(idx) { activeRowIndex = idx; renderModalList(); modalOverlay.style.display = 'flex'; }
+    
+    function closeModal() {
+      modalOverlay.style.display = 'none';
+      // 清空筛选条件
+      searchInput.value = '';
+      categoryFilter.value = 'all';
+      numberFilter.value = '';
+    }
+
+    document.getElementById('closeModalBtn').addEventListener('click', closeModal);
+    document.getElementById('clearCurrentCardBtn').addEventListener('click', ()=>{
+      const row = cardsData[activeRowIndex];
+      if(row.card) { selectedUids.delete(row.card.uid); row.card = null; }
+      updateSingleRowUI(activeRowIndex); generatePrompt(); closeModal();
+    });
+    searchInput.addEventListener('input', renderModalList);
+    categoryFilter.addEventListener('change', renderModalList);
+    numberFilter.addEventListener('input', renderModalList);
+    modalOverlay.addEventListener('click', (e) => { if (e.target === modalOverlay) closeModal(); });
+
+    // 提示词
+    function generatePrompt() {
+      const now = new Date();
+      const timeStr = `${now.getFullYear()}年${now.getMonth()+1}月${now.getDate()}日 ${now.getHours()}:${String(now.getMinutes()).padStart(2,'0')}`;
+      let p = `牌阵：${spreadInput.value || '（未命名）'}\n抽牌数：${cardsData.length}张\n占卜时刻：${timeStr}`;
+      if(wellInput.value.trim()) p += `\n倾诉/需求：${wellInput.value.trim()}`;
+      p += '\n\n';
+      cardsData.forEach((d,i)=>{ const c=d.card; p+=`第${i+1}张：${c?c.ch+' ('+c.en+')':'未选择'} [${d.reversed?'逆位':'正位'}]${d.note?' —— '+d.note:''}\n`; });
+      p += '\n请结合塔罗牌意、牌阵位置及正逆位，为我进行深度解读。';
+      promptOutput.textContent = p;
+    }
+
+    document.getElementById('copyPromptBtn').addEventListener('click', ()=>{
+      const text = promptOutput.textContent;
+      if (navigator.clipboard) navigator.clipboard.writeText(text).then(()=>alert('已复制')).catch(()=>fallbackCopy(text));
+      else fallbackCopy(text);
+    });
+    function fallbackCopy(text) { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta); alert('已复制'); }
+
+    // 模板系统
+    function renderTemplateMenu() {
+      templateMenu.innerHTML = '';
+      if(templates.length===0) templateMenu.innerHTML='<div style="padding:16px;text-align:center;">暂无模板</div>';
+      else templates.forEach((t,i)=> { const d=document.createElement('div'); d.className='template-menu-item'; d.innerHTML=`${t.name} <span class="badge">${t.cardCount}张</span>`; d.onclick=()=> applyTemplate(i); templateMenu.appendChild(d); });
+      const mgr=document.createElement('div'); mgr.className='manage-templates-btn'; mgr.textContent='＋ 管理模板'; mgr.onclick=openTemplateManager; templateMenu.appendChild(mgr);
+    }
+    dropdownBtn.addEventListener('click', (e)=>{ e.stopPropagation(); templateMenu.style.display = templateMenu.style.display==='block'?'none':'block'; renderTemplateMenu(); });
+    document.addEventListener('click', ()=> templateMenu.style.display='none');
+    function applyTemplate(idx) {
+      const t = templates[idx]; if(!t) return;
+      spreadInput.value = t.name; resetCardsData(t.cardCount);
+      t.meanings?.forEach((m,i)=>{ if(cardsData[i]) cardsData[i].note = m || ''; });
+      renderAllRows(); generatePrompt(); templateMenu.style.display='none';
+    }
+    function openTemplateManager() { templateModal.style.display='flex'; renderTemplateList(); templateMenu.style.display='none'; }
+    function renderTemplateList() {
+      templateListDiv.innerHTML=''; editPanel.style.display='none'; templateListDiv.style.display='block';
+      if(templates.length===0) templateListDiv.innerHTML='<div style="padding:20px;text-align:center;color:#6b5843;">暂无模板，点击新建</div>';
+      templates.forEach((t,i)=> {
+        const div=document.createElement('div'); div.className='template-item';
+        div.innerHTML=`<span><strong>${t.name}</strong> (${t.cardCount}张)</span><div class="template-actions"><button data-index="${i}" class="edit-tpl">✎</button><button data-index="${i}" class="delete-tpl">🗑</button><button data-index="${i}" class="export-tpl">⬇</button></div>`;
+        templateListDiv.appendChild(div);
+      });
+      document.querySelectorAll('.edit-tpl').forEach(b=> b.addEventListener('click', e=> editTemplate(e.target.dataset.index)));
+      document.querySelectorAll('.delete-tpl').forEach(b=> b.addEventListener('click', e=> { templates.splice(e.target.dataset.index,1); saveTemplates(); renderTemplateList(); }));
+      document.querySelectorAll('.export-tpl').forEach(b=> b.addEventListener('click', e=> exportSingle(templates[e.target.dataset.index])));
+    }
+    function editTemplate(index) {
+      const t = index!==undefined ? templates[index] : {name:'', cardCount:3, meanings:[]};
+      editPanel.style.display='block'; templateListDiv.style.display='none';
+      let html=`<h3 style="margin-bottom:20px;">${index!==undefined?'编辑模板':'新建模板'}</h3>`;
+      html+=`<div class="edit-field"><label>模板名称</label><input id="editName" value="${t.name||''}" placeholder="例如：凯尔特十字"></div>`;
+      html+=`<div class="edit-field"><label>牌数 (1-78)</label><input id="editCount" type="number" min="1" max="78" value="${t.cardCount||3}"></div>`;
+      html+=`<div class="edit-field"><label>位置含义（可选）</label><div class="meanings-editor" id="meaningsEditor"></div></div>`;
+      html+=`<div class="btn-group"><button id="cancelEditBtn">取消</button><button id="saveTemplateBtn" class="primary">保存模板</button></div>`;
+      editPanel.innerHTML=html;
+      const countInputTpl=document.getElementById('editCount'), meaningDiv=document.getElementById('meaningsEditor');
+      function renderMeanings(count){ let mh=''; for(let i=0;i<count;i++) mh+=`<div class="meaning-row"><span>第${i+1}张</span><input value="${t.meanings?.[i]||''}" data-idx="${i}" placeholder="例如：过去"></div>`; meaningDiv.innerHTML=mh; }
+      renderMeanings(parseInt(countInputTpl.value)||3);
+      countInputTpl.addEventListener('input', ()=> renderMeanings(parseInt(countInputTpl.value)||3));
+      document.getElementById('saveTemplateBtn').onclick= ()=>{
+        const name=document.getElementById('editName').value.trim(); if(!name){ alert('名称必填'); return; }
+        const count=parseInt(countInputTpl.value); const meanings=[]; 
+        document.querySelectorAll('#meaningsEditor input').forEach(inp=> meanings[inp.dataset.idx]=inp.value);
+        const newTpl={name, cardCount:count, meanings};
+        if(index!==undefined) templates[index]=newTpl; else templates.push(newTpl);
+        saveTemplates(); editPanel.style.display='none'; templateListDiv.style.display='block'; renderTemplateList();
+      };
+      document.getElementById('cancelEditBtn').onclick= ()=>{ editPanel.style.display='none'; templateListDiv.style.display='block'; };
+    }
+    document.getElementById('newTemplateBtn').onclick= ()=> editTemplate();
+    document.getElementById('exportAllBtn').onclick= ()=>{ const data=templates.map(t=>JSON.stringify(t)).join('\n'); downloadBlob(data,'templates.txt'); };
+    document.getElementById('importFileInput').onchange= function(e) {
+      const file=e.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload= ev=> { const lines=ev.target.result.split('\n').filter(l=>l.trim()); let imported=0; lines.forEach(l=>{ try{ const t=JSON.parse(l); if(t.name&&t.cardCount){ templates.push(t); imported++; } }catch(e){} }); if(imported){ saveTemplates(); renderTemplateList(); alert(`导入${imported}个`); } else alert('无效'); };
+      reader.readAsText(file);
+    };
+    function exportSingle(tpl){ downloadBlob(JSON.stringify(tpl), `${tpl.name}.json`); }
+    function downloadBlob(content, name){ const b=new Blob([content]); const a=document.createElement('a'); a.href=URL.createObjectURL(b); a.download=name; a.click(); }
+    document.getElementById('closeTemplateModal').onclick= ()=> templateModal.style.display='none';
+
+    // 监听
+    spreadInput.addEventListener('input', generatePrompt);
+    wellInput.addEventListener('input', generatePrompt);
+    countInput.addEventListener('blur', handleCountBlurOrEnter);
+    countInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); countInput.blur(); } });
+    document.getElementById('fullResetBtn').addEventListener('click', fullReset);
+
+    // 初始化
+    resetCardsData(3);
+    generatePrompt();
+  })();
+</script>
+</body>
+</html>
