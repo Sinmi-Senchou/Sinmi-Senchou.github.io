@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>亲民六道聊天记录可视化</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+    <style>
+        :root {
+            --bg: #e8ecf1;
+            --card-bg: #ffffff;
+            --border: #e0e0e0;
+            --text: #1a1a1a;
+            --shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.10);
+            --radius: 16px;
+            --mention-color: #1a73e8;
+            --mention-bg: #e8f0fe;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: #dce1e8;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 16px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .app-container {
+            width: 100%;
+            max-width: 720px;
+            height: 94vh;
+            max-height: 960px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .header {
+            background: #fff;
+            padding: 14px 20px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+            flex-shrink: 0;
+            z-index: 10;
+            flex-wrap: wrap;
+        }
+        .header-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: #1a1a1a;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            white-space: nowrap;
+        }
+        .header-title .icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: #fff;
+            flex-shrink: 0;
+        }
+        .header-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .btn {
+            padding: 9px 16px;
+            border-radius: 20px;
+            border: 1.5px solid #d0d5dd;
+            background: #fff;
+            cursor: pointer;
+            font-size: 0.84rem;
+            font-weight: 600;
+            color: #444;
+            transition: 0.2s;
+            white-space: nowrap;
+            letter-spacing: 0.01em;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+        .btn:hover {
+            background: #f5f6f8;
+            border-color: #b0b5bd;
+            color: #1a1a1a;
+        }
+        .btn:active {
+            background: #eef0f3;
+            transform: scale(0.96);
+        }
+        .btn-primary {
+            background: #1a73e8;
+            color: #fff;
+            border-color: #1a73e8;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.25);
+        }
+        .btn-primary:hover {
+            background: #1557b0;
+            border-color: #1557b0;
+            color: #fff;
+        }
+        .btn-export-image {
+            background: #27AE60;
+            color: #fff;
+            border-color: #27AE60;
+            box-shadow: 0 2px 8px rgba(39, 174, 96, 0.25);
+        }
+        .btn-export-image:hover {
+            background: #1E8C4C;
+            border-color: #1E8C4C;
+            color: #fff;
+        }
+        .btn svg {
+            width: 15px;
+            height: 15px;
+            flex-shrink: 0;
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 12px;
+            padding: 8px 20px;
+            background: #fafbfc;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            font-size: 0.78rem;
+            color: #888;
+            font-weight: 500;
+        }
+        .stats-bar.hidden {
+            display: none;
+        }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .stat-value {
+            font-weight: 700;
+            color: #555;
+        }
+
+        .import-zone {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 24px;
+            text-align: center;
+            cursor: pointer;
+            min-height: 300px;
+        }
+        .import-zone.hidden {
+            display: none;
+        }
+        .import-zone.drag-over {
+            background: #f0f4ff;
+            border: 3px dashed #a0b8d8;
+            border-radius: 16px;
+            margin: 12px;
+            box-shadow: 0 0 0 12px rgba(26, 115, 232, 0.04);
+        }
+        .import-zone .import-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+            opacity: 0.7;
+        }
+        .import-zone h3 {
+            font-size: 1.2rem;
+            color: #444;
+            margin-bottom: 6px;
+            font-weight: 700;
+        }
+        .import-zone p {
+            font-size: 0.85rem;
+            color: #999;
+            line-height: 1.6;
+            max-width: 400px;
+        }
+        .import-zone .btn {
+            margin-top: 16px;
+        }
+        .or-divider {
+            margin: 12px 0;
+            color: #bbb;
+            font-size: 0.8rem;
+        }
+        .paste-textarea {
+            width: 100%;
+            max-width: 500px;
+            min-height: 100px;
+            border-radius: 12px;
+            border: 1.5px solid #dde0e5;
+            padding: 12px 14px;
+            font-size: 0.82rem;
+            font-family: inherit;
+            resize: vertical;
+            outline: none;
+            background: #f9fafb;
+            color: #333;
+            display: none;
+            line-height: 1.5;
+        }
+        .paste-textarea.show {
+            display: block;
+        }
+        .paste-actions {
+            display: none;
+            gap: 8px;
+            margin-top: 10px;
+        }
+        .paste-actions.show {
+            display: flex;
+        }
+
+        .messages-container {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px 18px;
+            background: #f5f6f9;
+            display: none;
+            flex-direction: column;
+            gap: 4px;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: thin;
+            scrollbar-color: #c8c8c8 transparent;
+        }
+        .messages-container.show {
+            display: flex;
+        }
+        .messages-container::-webkit-scrollbar {
+            width: 5px;
+        }
+        .messages-container::-webkit-scrollbar-thumb {
+            background: #c8c8c8;
+            border-radius: 5px;
+        }
+
+        .date-divider {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            margin: 6px 0;
+            font-size: 0.72rem;
+            color: #b0b5c0;
+            font-weight: 600;
+            letter-spacing: 0.04em;
+        }
+        .date-divider::before,
+        .date-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e0e3e8;
+        }
+
+        .message-row {
+            display: flex;
+            flex-direction: column;
+            animation: fadeInUp 0.35s ease-out;
+            padding: 2px 0;
+        }
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(14px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .message-row {
+            align-items: flex-start;
+        }
+
+        .message-sender {
+            font-size: 0.73rem;
+            font-weight: 700;
+            margin-bottom: 2px;
+            padding: 0 8px;
+            letter-spacing: 0.03em;
+            cursor: default;
+        }
+
+        .message-bubble-wrapper {
+            max-width: 82%;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .reply-preview-card {
+            background: rgba(0, 0, 0, 0.03);
+            border-left: 3px solid #c8cdd5;
+            border-radius: 6px 8px 8px 6px;
+            padding: 6px 10px;
+            margin-bottom: 5px;
+            font-size: 0.76rem;
+            color: #777;
+            max-width: 100%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            cursor: default;
+        }
+        .reply-preview-card .reply-label {
+            font-weight: 700;
+            color: #999;
+            font-size: 0.7rem;
+            margin-right: 2px;
+        }
+
+        .bubble {
+            padding: 10px 14px;
+            border-radius: 14px;
+            font-size: 0.88rem;
+            line-height: 1.6;
+            word-break: break-word;
+            background: #ffffff;
+            border-bottom-left-radius: 5px;
+            color: #1a1a1a;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+            border-left: 3px solid #ccc;
+        }
+        .bubble .mention {
+            color: var(--mention-color);
+            background: var(--mention-bg);
+            border-radius: 3px;
+            padding: 1px 4px;
+            font-weight: 600;
+            font-size: 0.84rem;
+            white-space: nowrap;
+        }
+        .message-time {
+            font-size: 0.67rem;
+            color: #b0b5c0;
+            margin-top: 3px;
+            padding: 0 8px;
+        }
+
+        .toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #333;
+            color: #fff;
+            padding: 10px 22px;
+            border-radius: 24px;
+            font-size: 0.85rem;
+            z-index: 100;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-weight: 500;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+        }
+        .toast.show {
+            opacity: 1;
+        }
+
+        #fileInput {
+            display: none;
+        }
+
+        /* 预览弹窗 */
+        .preview-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        .preview-modal.show {
+            display: flex;
+        }
+        .preview-modal .preview-content {
+            max-width: 90vw;
+            max-height: 80vh;
+            overflow: auto;
+            background: #fff;
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            padding: 10px;
+        }
+        .preview-modal img {
+            display: block;
+            max-width: 100%;
+            height: auto;
+        }
+        .preview-modal .preview-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+        .preview-modal .btn {
+            font-size: 0.9rem;
+            padding: 10px 20px;
+            border-radius: 24px;
+            cursor: pointer;
+        }
+        .preview-modal .btn-download {
+            background: #1a73e8;
+            color: #fff;
+            border: none;
+            box-shadow: 0 2px 8px rgba(26, 115, 232, 0.3);
+        }
+        .preview-modal .btn-download:hover {
+            background: #1557b0;
+        }
+        .preview-modal .btn-close {
+            background: #fff;
+            color: #444;
+            border: 1.5px solid #d0d5dd;
+        }
+        .preview-modal .btn-close:hover {
+            background: #f5f6f8;
+        }
+
+        @media (max-width: 600px) {
+            .app-container {
+                height: 100vh;
+                max-height: 100vh;
+                border-radius: 0;
+            }
+            .header {
+                padding: 10px 14px;
+                gap: 6px;
+            }
+            .btn {
+                padding: 7px 12px;
+                font-size: 0.76rem;
+                border-radius: 16px;
+            }
+            .messages-container {
+                padding: 10px 10px;
+                gap: 2px;
+            }
+            .bubble {
+                font-size: 0.82rem;
+                padding: 9px 12px;
+            }
+            .preview-modal .preview-content {
+                max-width: 95vw;
+                max-height: 75vh;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="appContainer">
+        <div class="header">
+            <div class="header-title"><span class="icon">📜</span>聊天记录可视化</div>
+            <div class="header-actions">
+                <button class="btn btn-primary" onclick="triggerFileImport()">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                    导入文件
+                </button>
+                <button class="btn" onclick="loadDemoData()">💡 示例</button>
+                <button class="btn" onclick="togglePasteArea()">📋 粘贴</button>
+                <button class="btn btn-export-image" onclick="exportAsImage()" id="btnExportImage" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="currentColor" width="15" height="15"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                    导出长图
+                </button>
+                <button class="btn" onclick="clearAll()">🗑️</button>
+            </div>
+        </div>
+
+        <div class="stats-bar hidden" id="statsBar">
+            <span class="stat-item">💬 消息数：<span class="stat-value" id="statMsgCount">0</span></span>
+            <span class="stat-item">👥 参与用户：<span class="stat-value" id="statUserCount">0</span></span>
+            <span class="stat-item">📅 时间跨度：<span class="stat-value" id="statTimeRange">-</span></span>
+        </div>
+
+        <div class="messages-container" id="messagesContainer"></div>
+
+        <div class="import-zone" id="importZone" onclick="triggerFileImport()">
+            <div class="import-icon">📁</div>
+            <h3>导入聊天记录</h3>
+            <p>拖拽 txt 文件到此处，或点击选择文件<br>也支持粘贴聊天记录文本</p>
+            <div class="or-divider">— 或者粘贴文本 —</div>
+            <textarea class="paste-textarea" id="pasteTextarea" placeholder="在此粘贴聊天记录文本..." onclick="event.stopPropagation()"></textarea>
+            <div class="paste-actions" id="pasteActions">
+                <button class="btn btn-primary" onclick="event.stopPropagation(); parsePastedText()">解析文本</button>
+                <button class="btn" onclick="event.stopPropagation(); togglePasteArea()">取消</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 预览弹窗 -->
+    <div class="preview-modal" id="previewModal">
+        <div class="preview-content">
+            <img id="previewImage" src="" alt="聊天记录长图预览">
+        </div>
+        <div class="preview-actions">
+            <button class="btn btn-download" onclick="downloadPreviewImage()">
+                <svg viewBox="0 0 24 24" fill="currentColor" width="16" height="16"><path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z"/></svg>
+                下载图片
+            </button>
+            <button class="btn btn-close" onclick="closePreview()">关闭</button>
+        </div>
+    </div>
+
+    <input type="file" id="fileInput" accept=".txt,text/plain" onchange="handleFileSelect(event)">
+    <div class="toast" id="toast"></div>
+
+    <script>
+        (function() {
+            const userColorPool = ['#DAB961', '#4B5A72', '#523C2A', '#DDAAAA', '#8E855B', '#222222'];
+            const userColorMap = {};
+
+            function getColorForUser(username) {
+                if (userColorMap[username]) return userColorMap[username];
+                let hash = 0;
+                for (let i = 0; i < username.length; i++) {
+                    hash = username.charCodeAt(i) + ((hash << 5) - hash);
+                    hash = hash & hash;
+                }
+                const index = Math.abs(hash) % userColorPool.length;
+                const color = userColorPool[index];
+                userColorMap[username] = color;
+                return color;
+            }
+
+            const messagesContainer = document.getElementById('messagesContainer');
+            const importZone = document.getElementById('importZone');
+            const fileInput = document.getElementById('fileInput');
+            const statsBar = document.getElementById('statsBar');
+            const statMsgCount = document.getElementById('statMsgCount');
+            const statUserCount = document.getElementById('statUserCount');
+            const statTimeRange = document.getElementById('statTimeRange');
+            const pasteTextarea = document.getElementById('pasteTextarea');
+            const pasteActions = document.getElementById('pasteActions');
+            const btnExportImage = document.getElementById('btnExportImage');
+            const toastEl = document.getElementById('toast');
+            const previewModal = document.getElementById('previewModal');
+            const previewImage = document.getElementById('previewImage');
+            let toastTimer = null;
+            let parsedMessages = [];
+            let currentPreviewDataUrl = null;
+
+            function showToast(msg, duration = 2000) {
+                if (toastTimer) clearTimeout(toastTimer);
+                toastEl.textContent = msg;
+                toastEl.classList.add('show');
+                toastTimer = setTimeout(() => {
+                    toastEl.classList.remove('show');
+                    toastTimer = null;
+                }, duration);
+            }
+
+            window.triggerFileImport = () => fileInput.click();
+
+            window.handleFileSelect = (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+                if (!file.name.toLowerCase().endsWith('.txt') && file.type !== 'text/plain') {
+                    showToast('请选择 .txt 文本文件');
+                    return;
+                }
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    parseAndRender(e.target.result);
+                    showToast('✅ 已导入：' + file.name);
+                };
+                reader.onerror = () => showToast('❌ 文件读取失败');
+                reader.readAsText(file, 'UTF-8');
+                fileInput.value = '';
+            };
+
+            window.togglePasteArea = () => {
+                const visible = pasteTextarea.classList.contains('show');
+                if (visible) {
+                    pasteTextarea.classList.remove('show');
+                    pasteActions.classList.remove('show');
+                    pasteTextarea.value = '';
+                } else {
+                    pasteTextarea.classList.add('show');
+                    pasteActions.classList.add('show');
+                    setTimeout(() => pasteTextarea.focus(), 150);
+                }
+            };
+
+            window.parsePastedText = () => {
+                const text = pasteTextarea.value.trim();
+                if (!text) {
+                    showToast('请先粘贴聊天记录文本');
+                    return;
+                }
+                parseAndRender(text);
+                pasteTextarea.value = '';
+                pasteTextarea.classList.remove('show');
+                pasteActions.classList.remove('show');
+                showToast('✅ 文本已解析');
+            };
+
+            const appContainer = document.getElementById('appContainer');
+            appContainer.addEventListener('dragover', e => {
+                e.preventDefault();
+                importZone.classList.add('drag-over');
+            });
+            appContainer.addEventListener('dragleave', () => importZone.classList.remove('drag-over'));
+            appContainer.addEventListener('drop', e => {
+                e.preventDefault();
+                importZone.classList.remove('drag-over');
+                const file = e.dataTransfer.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => parseAndRender(ev.target.result);
+                    reader.readAsText(file, 'UTF-8');
+                }
+            });
+
+            function parseAndRender(text) {
+                parsedMessages = parseChatLog(text);
+                if (!parsedMessages.length) {
+                    showToast('⚠️ 未能解析到有效消息');
+                    return;
+                }
+                renderMessages();
+                updateStats();
+                importZone.classList.add('hidden');
+                messagesContainer.classList.add('show');
+                statsBar.classList.remove('hidden');
+                btnExportImage.style.display = 'flex';
+                setTimeout(() => messagesContainer.scrollTop = messagesContainer.scrollHeight, 100);
+            }
+
+            function parseChatLog(text) {
+                const messages = [];
+                const normalized = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n');
+                const blocks = normalized.split(/\n\s*\n/);
+                const headerRegex = /^(.+?)\s+(\d{4}-\d{2}-\d{2}\/\d{2}:\d{2})$/;
+                for (const block of blocks) {
+                    const lines = block.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+                    if (!lines.length) continue;
+                    const headerMatch = lines[0].match(headerRegex);
+                    if (!headerMatch) continue;
+                    const username = headerMatch[1].trim();
+                    const timestampStr = headerMatch[2];
+                    const timestamp = parseTimestamp(timestampStr);
+                    let replyContent = null;
+                    let contentStart = 1;
+                    if (lines.length > 1 && lines[1].startsWith('>')) {
+                        const ref = lines[1].substring(1).trim();
+                        if (ref.startsWith('［回复］')) replyContent = ref.substring(4).trim();
+                        else if (ref.length) replyContent = ref;
+                        contentStart = 2;
+                    }
+                    const content = lines.slice(contentStart).join('\n').trim();
+                    if (!content && !replyContent) continue;
+                    messages.push({
+                        username,
+                        timestamp,
+                        timestampStr,
+                        replyContent,
+                        content: content || '',
+                        id: 'msg_' + messages.length + '_' + Date.now()
+                    });
+                }
+                messages.sort((a, b) => a.timestamp - b.timestamp);
+                return messages;
+            }
+
+            function parseTimestamp(str) {
+                const m = str.match(/^(\d{4})-(\d{2})-(\d{2})\/(\d{2}):(\d{2})$/);
+                if (m) return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]);
+                return new Date(0);
+            }
+
+            function renderMessages() {
+                messagesContainer.innerHTML = '';
+                if (!parsedMessages.length) return;
+                let lastDate = '';
+                parsedMessages.forEach((msg, i) => {
+                    const dateLabel = getDateLabel(msg.timestamp);
+                    if (dateLabel !== lastDate) {
+                        const div = document.createElement('div');
+                        div.className = 'date-divider';
+                        div.textContent = dateLabel;
+                        messagesContainer.appendChild(div);
+                        lastDate = dateLabel;
+                    }
+                    messagesContainer.appendChild(createRow(msg, i));
+                });
+            }
+
+            function getDateLabel(ts) {
+                const d = new Date(ts);
+                const now = new Date();
+                if (d.toDateString() === now.toDateString()) return '今天';
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (d.toDateString() === yesterday.toDateString()) return '昨天';
+                return d.getFullYear() + '年' + (d.getMonth() + 1) + '月' + d.getDate() + '日';
+            }
+
+            function createRow(msg, index) {
+                const color = getColorForUser(msg.username);
+                const row = document.createElement('div');
+                row.className = 'message-row';
+                row.style.animationDelay = (index * 0.02) + 's';
+
+                const sender = document.createElement('span');
+                sender.className = 'message-sender';
+                sender.textContent = msg.username;
+                sender.style.color = color;
+                row.appendChild(sender);
+
+                const wrapper = document.createElement('div');
+                wrapper.className = 'message-bubble-wrapper';
+
+                if (msg.replyContent) {
+                    const card = document.createElement('div');
+                    card.className = 'reply-preview-card';
+                    card.innerHTML = '<span class="reply-label">回复</span> ' + escapeHtml(msg.replyContent.substring(0, 80) + (
+                        msg.replyContent.length > 80 ? '...' : ''));
+                    wrapper.appendChild(card);
+                }
+
+                const bubble = document.createElement('div');
+                bubble.className = 'bubble';
+                bubble.style.borderLeftColor = color;
+                bubble.innerHTML = highlightMentions(msg.content);
+                bubble.title = '点击复制消息内容';
+                bubble.onclick = () => copyText(msg.content);
+                wrapper.appendChild(bubble);
+                row.appendChild(wrapper);
+
+                const time = document.createElement('div');
+                time.className = 'message-time';
+                time.textContent = formatTime(msg.timestamp);
+                time.title = msg.timestampStr;
+                row.appendChild(time);
+
+                return row;
+            }
+
+            function formatTime(ts) {
+                const d = new Date(ts);
+                const pad = n => String(n).padStart(2, '0');
+                const now = new Date();
+                if (d.toDateString() === now.toDateString()) return '今天 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+                const yesterday = new Date(now);
+                yesterday.setDate(yesterday.getDate() - 1);
+                if (d.toDateString() === yesterday.toDateString()) return '昨天 ' + pad(d.getHours()) + ':' + pad(d.getMinutes());
+                return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()) + ' ' + pad(d.getHours()) + ':' +
+                    pad(d.getMinutes());
+            }
+
+            function highlightMentions(text) {
+                return text.replace(/@([^\s@,，。！？!?\n]+)/g, (m, name) => {
+                    if (name.length < 2 && !/[\u4e00-\u9fff]/.test(name)) return m;
+                    return '<span class="mention">@' + escapeHtml(name) + '</span>';
+                });
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function copyText(text) {
+                if (navigator.clipboard) {
+                    navigator.clipboard.writeText(text).then(() => showToast('📋 已复制'));
+                } else {
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    document.body.appendChild(ta);
+                    ta.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    showToast('📋 已复制');
+                }
+            }
+
+            function updateStats() {
+                statMsgCount.textContent = parsedMessages.length;
+                const users = new Set(parsedMessages.map(m => m.username));
+                statUserCount.textContent = users.size;
+                if (parsedMessages.length) {
+                    const first = parsedMessages[0].timestamp;
+                    const last = parsedMessages[parsedMessages.length - 1].timestamp;
+                    const pad = n => String(n).padStart(2, '0');
+                    const fmt = d => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+                    statTimeRange.textContent = fmt(first) === fmt(last) ? fmt(first) : fmt(first) + ' ~ ' + fmt(last);
+                }
+            }
+
+            window.clearAll = () => {
+                parsedMessages = [];
+                messagesContainer.innerHTML = '';
+                messagesContainer.classList.remove('show');
+                importZone.classList.remove('hidden');
+                statsBar.classList.add('hidden');
+                btnExportImage.style.display = 'none';
+                pasteTextarea.value = '';
+                pasteTextarea.classList.remove('show');
+                pasteActions.classList.remove('show');
+                Object.keys(userColorMap).forEach(k => delete userColorMap[k]);
+                showToast('已清空');
+            };
+
+            // 导出长图：强制禁用动画并设置不透明度为1，彻底消除半透明遮挡
+            window.exportAsImage = async function() {
+                if (!parsedMessages.length) {
+                    showToast('⚠️ 没有消息可导出');
+                    return;
+                }
+
+                // 保存原始样式
+                const origOverflow = messagesContainer.style.overflow;
+                const origMaxHeight = messagesContainer.style.maxHeight;
+                const origHeight = messagesContainer.style.height;
+
+                // 获取所有消息行并强制设置样式
+                const rows = messagesContainer.querySelectorAll('.message-row');
+                const originalStyles = [];
+                rows.forEach(row => {
+                    originalStyles.push({
+                        element: row,
+                        animation: row.style.animation,
+                        opacity: row.style.opacity
+                    });
+                    row.style.animation = 'none';
+                    row.style.opacity = '1';
+                });
+
+                // 临时展开容器
+                messagesContainer.style.overflow = 'visible';
+                messagesContainer.style.maxHeight = 'none';
+                messagesContainer.style.height = 'auto';
+
+                // 等待布局更新
+                await new Promise(r => requestAnimationFrame(r));
+                await new Promise(r => setTimeout(r, 150));
+
+                try {
+                    const canvas = await html2canvas(messagesContainer, {
+                        backgroundColor: '#f5f6f9',
+                        scale: 2,
+                        useCORS: true,
+                        allowTaint: true,
+                        logging: false,
+                        width: messagesContainer.offsetWidth,
+                        height: messagesContainer.scrollHeight,
+                        windowWidth: messagesContainer.offsetWidth,
+                        windowHeight: messagesContainer.scrollHeight,
+                        scrollX: 0,
+                        scrollY: 0
+                    });
+
+                    // 恢复消息行样式
+                    originalStyles.forEach(({ element, animation, opacity }) => {
+                        element.style.animation = animation;
+                        element.style.opacity = opacity;
+                    });
+
+                    // 恢复容器样式
+                    messagesContainer.style.overflow = origOverflow;
+                    messagesContainer.style.maxHeight = origMaxHeight;
+                    messagesContainer.style.height = origHeight;
+
+                    // 生成预览
+                    currentPreviewDataUrl = canvas.toDataURL('image/png');
+                    previewImage.src = currentPreviewDataUrl;
+                    previewModal.classList.add('show');
+
+                    showToast('✅ 预览已生成，右键图片或点击下载按钮保存');
+                } catch (err) {
+                    console.error(err);
+                    // 确保恢复样式
+                    originalStyles.forEach(({ element, animation, opacity }) => {
+                        element.style.animation = animation;
+                        element.style.opacity = opacity;
+                    });
+                    messagesContainer.style.overflow = origOverflow;
+                    messagesContainer.style.maxHeight = origMaxHeight;
+                    messagesContainer.style.height = origHeight;
+                    showToast('❌ 生成失败，请重试');
+                }
+            };
+
+            // 下载预览图片
+            window.downloadPreviewImage = function() {
+                if (!currentPreviewDataUrl) {
+                    showToast('⚠️ 请先生成预览');
+                    return;
+                }
+                const now = new Date();
+                const pad = n => String(n).padStart(2, '0');
+                const filename = '聊天记录长图_' + now.getFullYear() + '-' + pad(now.getMonth() + 1) + '-' + pad(now.getDate()) +
+                    '_' + pad(now.getHours()) + pad(now.getMinutes()) + pad(now.getSeconds()) + '.png';
+                const a = document.createElement('a');
+                a.href = currentPreviewDataUrl;
+                a.download = filename;
+                a.click();
+                showToast('✅ 图片已下载');
+            };
+
+            window.closePreview = function() {
+                previewModal.classList.remove('show');
+                currentPreviewDataUrl = null;
+            };
+
+            previewModal.addEventListener('click', function(e) {
+                if (e.target === previewModal) closePreview();
+            });
+
+            window.loadDemoData = () => {
+                const demo = `亲见千潮 2026-06-06/14:30
+>
+大家好！欢迎来到亲民六道模拟聊天室 👋
+
+猫普顿 2026-06-06/14:31
+>
+你好@亲见千潮！这个聊天室功能很丰富啊
+
+慧见理冬 2026-06-06/14:32
+>
+确实，可以@亲见千潮 和 @猫普顿 一起聊天
+
+亲见千潮 2026-06-06/14:33
+>［回复］你好@亲见千潮！这个聊天室功能很丰富啊
+怎么感觉你们说话像人机
+
+浅村思禅 2026-06-06/14:35
+>
+什么这不是示例吗，按照剧本我应该@天时舷灵 快来加入讨论~
+
+天时舷灵 2026-06-06/14:36
+>［回复］什么这不是示例吗，按照剧本我应该@天时舷灵 快来加入讨论~
+来了来了……话说这样真的不用重新再录一遍吗……
+
+林曦 2026-06-06/14:38
+>
+咔了咔了，直接一条过罢`;
+                parseAndRender(demo);
+                showToast('✅ 已加载示例对话');
+            };
+
+            document.addEventListener('keydown', e => {
+                if (e.ctrlKey && e.key === 's' && parsedMessages.length) {
+                    e.preventDefault();
+                    exportAsImage();
+                }
+                if (e.key === 'Escape') {
+                    if (previewModal.classList.contains('show')) {
+                        closePreview();
+                    } else if (parsedMessages.length && confirm('确定清空聊天记录吗？')) {
+                        clearAll();
+                    }
+                }
+            });
+
+            // 初始化
+            messagesContainer.classList.remove('show');
+            importZone.classList.remove('hidden');
+            statsBar.classList.add('hidden');
+            btnExportImage.style.display = 'none';
+        })();
+    </script>
+</body>
+</html>
