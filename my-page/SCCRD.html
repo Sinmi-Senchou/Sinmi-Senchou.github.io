@@ -545,11 +545,21 @@
 
     <script>
         (function() {
+            const presetColors = {
+                '亲见千潮': '#DAB961',
+                '猫普顿': '#4B5A72',
+                '慧见理冬': '#523C2A',
+                '浅村思禅': '#DDAAAA',
+                '天时舷灵': '#8E855B',
+                '林曦': '#222222'
+            };
             const userColorPool = ['#DAB961', '#4B5A72', '#523C2A', '#DDAAAA', '#8E855B', '#222222'];
             const userColorMap = {};
 
             function getColorForUser(username) {
-                if (userColorMap[username]) return userColorMap[username];
+                if (presetColors[username]) {
+                    return presetColors[username];
+                }
                 let hash = 0;
                 for (let i = 0; i < username.length; i++) {
                     hash = username.charCodeAt(i) + ((hash << 5) - hash);
