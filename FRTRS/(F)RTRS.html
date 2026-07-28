@@ -96,11 +96,8 @@
             padding: 30px 28px 24px;
             width: 100%;
             max-width: 580px;
-            box-shadow:
-                0 20px 60px rgba(0,0,0,0.5),
-                0 4px 16px rgba(0,0,0,0.3),
-                inset 0 1px 0 rgba(255,255,255,0.03),
-                0 0 0 1px rgba(34,85,85,0.15);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3),
+                        inset 0 1px 0 rgba(255,255,255,0.03), 0 0 0 1px rgba(34,85,85,0.15);
             position: relative;
             overflow: hidden;
         }
@@ -115,26 +112,18 @@
         }
 
         .top-bar {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 18px;
-            padding: 0 4px;
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 18px; padding: 0 4px;
         }
 
         .live-clock {
-            font-family: var(--font-mono);
-            font-size: 1.05rem;
-            color: var(--text-secondary);
-            letter-spacing: 0.5px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            font-family: var(--font-mono); font-size: 1.05rem;
+            color: var(--text-secondary); letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
         }
 
         .live-dot {
-            width: 8px; height: 8px;
-            border-radius: 50%;
+            width: 8px; height: 8px; border-radius: 50%;
             background: var(--success);
             animation: livePulse 2s ease-in-out infinite;
             box-shadow: 0 0 8px rgba(39,174,96,0.6);
@@ -146,323 +135,187 @@
         }
 
         .status-badge {
-            font-size: 0.78rem;
-            padding: 5px 12px;
-            border-radius: 20px;
-            background: rgba(39,174,96,0.12);
-            color: #5dde8e;
-            letter-spacing: 0.4px;
-            font-weight: 500;
-            border: 1px solid rgba(39,174,96,0.2);
-            white-space: nowrap;
+            font-size: 0.78rem; padding: 5px 12px; border-radius: 20px;
+            background: rgba(39,174,96,0.12); color: #5dde8e;
+            letter-spacing: 0.4px; font-weight: 500;
+            border: 1px solid rgba(39,174,96,0.2); white-space: nowrap;
         }
-
         .status-badge.offline {
-            background: rgba(192,57,43,0.12);
-            color: #e74c3c;
+            background: rgba(192,57,43,0.12); color: #e74c3c;
             border-color: rgba(192,57,43,0.2);
         }
-
         .status-badge.waiting {
-            background: rgba(42,161,152,0.12);
-            color: #2aa198;
+            background: rgba(42,161,152,0.12); color: #2aa198;
             border-color: rgba(42,161,152,0.25);
         }
 
         .frequency-display { text-align: center; margin-bottom: 10px; }
-
         .freq-label {
-            font-size: 0.7rem;
-            text-transform: uppercase;
-            letter-spacing: 3px;
-            color: var(--text-secondary);
-            margin-bottom: 2px;
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 3px;
+            color: var(--text-secondary); margin-bottom: 2px;
         }
-
         .freq-number {
-            font-family: var(--font-mono);
-            font-size: 3.2rem;
-            font-weight: 700;
+            font-family: var(--font-mono); font-size: 3.2rem; font-weight: 700;
             letter-spacing: 2px;
             background: linear-gradient(180deg, #8fd0c0 0%, #2aa198 40%, #185555 80%);
-            -webkit-background-clip: text;
-            background-clip: text;
+            -webkit-background-clip: text; background-clip: text;
             -webkit-text-fill-color: transparent;
             filter: drop-shadow(0 0 12px rgba(42,161,152,0.4));
             line-height: 1.1;
         }
-
         .freq-unit {
-            font-size: 0.9rem;
-            letter-spacing: 1px;
+            font-size: 0.9rem; letter-spacing: 1px;
             color: var(--text-secondary);
             -webkit-text-fill-color: var(--text-secondary);
         }
 
         .now-playing-section {
-            background: rgba(0,0,0,0.25);
-            border-radius: 16px;
-            padding: 18px 20px;
-            margin-bottom: 14px;
-            border: 1px solid var(--border);
-            text-align: center;
-            min-height: 90px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+            background: rgba(0,0,0,0.25); border-radius: 16px; padding: 18px 20px;
+            margin-bottom: 14px; border: 1px solid var(--border);
+            text-align: center; min-height: 90px;
+            display: flex; flex-direction: column; justify-content: center;
             transition: all 0.4s;
         }
-
         .song-title {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #e0f0ef;
-            letter-spacing: 0.3px;
-            line-height: 1.3;
-            word-break: break-word;
+            font-size: 1.3rem; font-weight: 600; color: #e0f0ef;
+            letter-spacing: 0.3px; line-height: 1.3; word-break: break-word;
         }
-
         .song-artist { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
-
         .song-index {
-            font-size: 0.7rem;
-            color: var(--accent);
-            letter-spacing: 1px;
-            text-transform: uppercase;
-            margin-bottom: 4px;
-            opacity: 0.8;
+            font-size: 0.7rem; color: var(--accent); letter-spacing: 1px;
+            text-transform: uppercase; margin-bottom: 4px; opacity: 0.8;
         }
-
         .no-song {
-            color: var(--text-secondary);
-            font-style: italic;
-            font-size: 0.95rem;
-            opacity: 0.7;
+            color: var(--text-secondary); font-style: italic;
+            font-size: 0.95rem; opacity: 0.7;
         }
 
         .progress-container { margin-bottom: 10px; padding: 0 4px; }
-
         .progress-time-row {
-            display: flex;
-            justify-content: space-between;
-            font-family: var(--font-mono);
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-bottom: 5px;
+            display: flex; justify-content: space-between;
+            font-family: var(--font-mono); font-size: 0.75rem;
+            color: var(--text-secondary); margin-bottom: 5px;
         }
-
         .progress-bar-outer {
-            height: 6px;
-            background: var(--progress-bg);
-            border-radius: 3px;
-            overflow: hidden;
+            height: 6px; background: var(--progress-bg);
+            border-radius: 3px; overflow: hidden;
         }
-
         .progress-bar-inner {
             height: 100%;
             background: linear-gradient(90deg, #1f5c5c, #2aa198, #4db8a8);
-            border-radius: 3px;
-            transition: width 0.9s linear;
+            border-radius: 3px; transition: width 0.9s linear;
             position: relative;
         }
-
         .progress-bar-inner::after {
-            content: '';
-            position: absolute;
-            right: 0; top: 50%;
-            transform: translateY(-50%);
-            width: 12px; height: 12px;
-            border-radius: 50%;
-            background: #5ec4b4;
-            box-shadow: 0 0 10px rgba(42,161,152,0.7);
-            opacity: 0.9;
+            content: ''; position: absolute; right: 0; top: 50%;
+            transform: translateY(-50%); width: 12px; height: 12px;
+            border-radius: 50%; background: #5ec4b4;
+            box-shadow: 0 0 10px rgba(42,161,152,0.7); opacity: 0.9;
         }
 
         .up-next {
-            background: rgba(0,0,0,0.15);
-            border-radius: 10px;
-            padding: 10px 14px;
-            margin-bottom: 14px;
-            font-size: 0.8rem;
-            color: var(--text-secondary);
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            border: 1px solid transparent;
+            background: rgba(0,0,0,0.15); border-radius: 10px; padding: 10px 14px;
+            margin-bottom: 14px; font-size: 0.8rem; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 8px; border: 1px solid transparent;
         }
-
         .up-next-icon { font-size: 1rem; }
-        .up-next-info {
-            flex: 1;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
+        .up-next-info { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .up-next-time {
-            font-family: var(--font-mono);
-            font-size: 0.73rem;
-            color: var(--accent);
-            white-space: nowrap;
+            font-family: var(--font-mono); font-size: 0.73rem;
+            color: var(--accent); white-space: nowrap;
         }
 
         .controls-row {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 16px;
-            margin-bottom: 12px;
-            flex-wrap: wrap;
+            display: flex; align-items: center; justify-content: center;
+            gap: 16px; margin-bottom: 12px; flex-wrap: wrap;
         }
-
         .btn-power {
-            width: 56px; height: 56px;
-            border-radius: 50%;
+            width: 56px; height: 56px; border-radius: 50%;
             border: 2px solid rgba(255,255,255,0.15);
-            background: rgba(0,0,0,0.4);
-            color: #fff;
-            font-size: 1.5rem;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0,0,0,0.4); color: #fff; font-size: 1.5rem;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
         }
-
         .btn-power:hover {
             border-color: var(--accent);
             box-shadow: 0 0 20px rgba(42,161,152,0.35);
             transform: scale(1.04);
         }
-
         .btn-power.on {
             border-color: var(--accent);
             box-shadow: 0 0 18px rgba(42,161,152,0.5);
             background: rgba(42,161,152,0.12);
         }
-
         .volume-slider-container { display: flex; align-items: center; gap: 8px; }
         .volume-icon { font-size: 1.2rem; color: var(--text-secondary); }
-
         .volume-slider {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 80px;
-            height: 5px;
-            border-radius: 3px;
-            background: var(--progress-bg);
-            outline: none;
-            cursor: pointer;
+            -webkit-appearance: none; appearance: none;
+            width: 80px; height: 5px; border-radius: 3px;
+            background: var(--progress-bg); outline: none; cursor: pointer;
         }
-
         .volume-slider::-webkit-slider-thumb {
-            -webkit-appearance: none;
-            appearance: none;
-            width: 20px; height: 20px;
-            border-radius: 50%;
-            background: #2aa198;
-            cursor: pointer;
-            border: 2px solid #fff;
-            box-shadow: 0 0 8px rgba(42,161,152,0.6);
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #2aa198; cursor: pointer;
+            border: 2px solid #fff; box-shadow: 0 0 8px rgba(42,161,152,0.6);
         }
-
         .volume-value {
-            font-family: var(--font-mono);
-            font-size: 0.7rem;
-            color: var(--text-secondary);
-            width: 28px;
-            text-align: center;
+            font-family: var(--font-mono); font-size: 0.7rem;
+            color: var(--text-secondary); width: 28px; text-align: center;
         }
 
         .schedule-toggle {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 6px;
-            font-size: 0.78rem;
-            color: var(--text-secondary);
-            cursor: pointer;
-            padding: 8px;
-            opacity: 0.7;
-            transition: opacity 0.2s;
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; font-size: 0.78rem; color: var(--text-secondary);
+            cursor: pointer; padding: 8px; opacity: 0.7; transition: opacity 0.2s;
         }
         .schedule-toggle:hover { opacity: 1; color: var(--accent); }
-
         .schedule-arrow { transition: transform 0.3s; display: inline-block; font-size: 0.65rem; }
         .schedule-arrow.open { transform: rotate(180deg); }
 
         .schedule-table-wrapper {
-            max-height: 0;
-            overflow: hidden;
+            max-height: 0; overflow: hidden;
             transition: max-height 0.5s, margin 0.3s;
         }
         .schedule-table-wrapper.open { max-height: 400px; margin-top: 10px; }
 
         .schedule-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.73rem;
-            background: rgba(0,0,0,0.2);
-            border-radius: 10px;
-            display: block;
-            max-height: 280px;
-            overflow-y: auto;
+            width: 100%; border-collapse: collapse; font-size: 0.73rem;
+            background: rgba(0,0,0,0.2); border-radius: 10px;
+            display: block; max-height: 280px; overflow-y: auto;
         }
-
         .schedule-table thead { position: sticky; top: 0; z-index: 1; }
-
         .schedule-table th {
-            background: rgba(0,0,0,0.6);
-            color: var(--accent);
-            font-weight: 500;
-            padding: 8px 10px;
-            text-align: left;
-            font-size: 0.68rem;
-            text-transform: uppercase;
-            white-space: nowrap;
+            background: rgba(0,0,0,0.6); color: var(--accent); font-weight: 500;
+            padding: 8px 10px; text-align: left; font-size: 0.68rem;
+            text-transform: uppercase; white-space: nowrap;
         }
-
         .schedule-table td {
-            padding: 7px 10px;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
+            padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04);
             white-space: nowrap;
         }
-
         .schedule-table tr.now-playing-row {
-            background: rgba(42,161,152,0.12);
-            font-weight: 600;
-            color: #c0f0e8;
+            background: rgba(42,161,152,0.12); font-weight: 600; color: #c0f0e8;
         }
-
         .schedule-table .time-col { font-family: var(--font-mono); color: var(--accent); width: 70px; }
         .schedule-table .dur-col { font-family: var(--font-mono); color: var(--text-secondary); width: 55px; text-align: center; }
         .schedule-table .title-col { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
         .schedule-table .artist-col { color: var(--text-secondary); max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
 
         .message-toast {
-            position: fixed;
-            top: 20px; left: 50%;
-            transform: translateX(-50%);
-            background: #1c2e2e;
-            color: #2aa198;
-            padding: 10px 20px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            z-index: 100;
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #1c2e2e; color: #2aa198; padding: 10px 20px;
+            border-radius: 20px; font-size: 0.85rem; z-index: 100;
             border: 1px solid rgba(42,161,152,0.3);
             box-shadow: 0 8px 24px rgba(0,0,0,0.5);
-            animation: slideDown 0.4s;
-            max-width: 90vw;
-            text-align: center;
+            animation: slideDown 0.4s; max-width: 90vw; text-align: center;
         }
-
         @keyframes slideDown {
             from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-
         .message-toast.error {
-            background: #2b1e1e;
-            color: #e74c3c;
+            background: #2b1e1e; color: #e74c3c;
             border-color: rgba(231,76,60,0.4);
         }
 
@@ -492,7 +345,7 @@
     <div class="frequency-display">
         <div class="freq-label">F R E Q U E N C Y</div>
         <div class="freq-number">
-            98<span style="font-size:0.7em;">.</span>7 <span class="freq-unit">MHz</span>
+            603<span style="font-size:0.7em;">.</span>37 <span class="freq-unit">MHz</span>
         </div>
     </div>
 
@@ -556,21 +409,22 @@
         // ==================== 配置区 ====================
         const MUSIC_PATH_PREFIX = 'music/';
 
-        // ★★★ 电台第一首歌的开始时间（本地时间） ★★★
+        // 电台第一首歌的开始时间（本地时间）
         const RADIO_START = new Date(2026, 6, 29, 0, 0, 0); // 2026年7月29日 00:00:00
 
-        // ★★★ 手动播放列表 ★★★
+        // ★★★ 手动播放列表（代替CSV） ★★★
+        // 格式：[文件名, 时长, 歌曲名, 艺术家]
         const manualPlaylist = [
             ['DDBY - 流星阶段.mp3', '03:33', '流星阶段', 'DDBY'],
             ['ginkiha - 聖輦船の風景.mp3', '03:53', '聖輦船の風景', 'ginkiha'],
-            // 添加更多歌曲，例如：
-            // ['song2.mp3', '04:15', '第二首歌', '歌手B'],
+            // 可以在这里添加更多歌曲
         ];
 
         const LOOP_PLAYLIST = true;
         const SYNC_INTERVAL = 15000;
         const MAX_DRIFT_SECONDS = 2.0;
         const PRELOAD_BEFORE_END = 12;
+        const MAX_CONSECUTIVE_SWITCHES = 5; // 防止无限切换
 
         // ==================== DOM引用 ====================
         const audioPlayer = document.getElementById('audioPlayer');
@@ -607,6 +461,7 @@
         let progressAnimFrameId = null;
         let preloadAudio = null;
         let toastTimeoutId = null;
+        let consecutiveSwitchCount = 0; // 连续切换计数器
 
         // ==================== 工具函数 ====================
         function parseDuration(durStr) {
@@ -674,7 +529,7 @@
             }).filter(t => t.filename && t.durationSec > 0);
 
             if (playlist.length === 0) {
-                showToast('❌ 播放列表为空或所有歌曲时长无效', true);
+                showToast('❌ 播放列表为空，请检查手动配置', true);
                 scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#e74c3c;">列表为空</td></tr>';
                 return false;
             }
@@ -739,27 +594,14 @@
 
         // ==================== 播放控制 ====================
         function playTrackAt(trackIndex, offsetSec) {
-            if (trackIndex < 0 || trackIndex >= playlist.length) {
-                console.warn('Invalid track index:', trackIndex);
-                return false;
-            }
+            if (trackIndex < 0 || trackIndex >= playlist.length) return false;
             const track = playlist[trackIndex];
-
-            // 防止时长为0的歌曲导致无限递归
-            if (track.durationSec <= 0) {
-                console.warn('Track duration is zero, skipping:', track.filename);
-                currentTrackIndex = trackIndex;
-                switchToNextTrack();
-                return false;
-            }
-
             const audioSrc = MUSIC_PATH_PREFIX + track.filename;
 
             if (audioPlayer.src !== audioSrc || audioPlayer.readyState === 0) {
                 audioPlayer.src = audioSrc;
             }
-            const safeOffset = Math.max(0, Math.min(offsetSec, track.durationSec));
-            audioPlayer.currentTime = safeOffset;
+            audioPlayer.currentTime = Math.max(0, Math.min(offsetSec, track.durationSec));
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
 
             currentTrackIndex = trackIndex;
@@ -780,15 +622,33 @@
         function scheduleNextTrackSwitch() {
             if (switchTimeoutId) clearTimeout(switchTimeoutId);
             if (currentTrackIndex < 0 || !currentTrackEndTime) return;
+
             const remainingMs = currentTrackEndTime - Date.now();
+
             if (remainingMs <= 0) {
-                // 立即切换，但增加微小延迟避免同步递归
-                setTimeout(() => {
-                    if (isPoweredOn && currentTrackIndex >= 0) switchToNextTrack();
-                }, 10);
+                // 立即切换，但使用 setTimeout 避免同步递归，并检查切换次数
+                if (consecutiveSwitchCount >= MAX_CONSECUTIVE_SWITCHES) {
+                    console.error('[电台] 连续切换次数过多，停止切换');
+                    stopPlayback();
+                    showToast('⚠️ 播放异常：切换过于频繁，已停止', true);
+                    return;
+                }
+                consecutiveSwitchCount++;
+                switchTimeoutId = setTimeout(() => {
+                    if (isPoweredOn && currentTrackIndex >= 0) {
+                        switchToNextTrack();
+                    }
+                }, 0);
                 return;
             }
-            switchTimeoutId = setTimeout(() => switchToNextTrack(), remainingMs + 50);
+
+            // 正常情况，重置连续切换计数
+            consecutiveSwitchCount = 0;
+            switchTimeoutId = setTimeout(() => {
+                if (isPoweredOn && currentTrackIndex >= 0) {
+                    switchToNextTrack();
+                }
+            }, remainingMs + 50);
             schedulePreload(remainingMs);
         }
 
@@ -818,16 +678,14 @@
         }
 
         function switchToNextTrack() {
-            if (!isPoweredOn || playlist.length === 0) return;
+            if (!isPoweredOn) return;
             const nextIndex = getNextTrackIndex();
-
-            // 防止死循环：如果下一首索引无效或与当前相同，停止播放
-            if (nextIndex < 0 || nextIndex === currentTrackIndex) {
-                console.warn('No valid next track, stopping playback.');
+            if (nextIndex < 0) {
+                // 播放列表结束
                 stopPlayback();
-                statusBadge.textContent = '⏹ 播放异常停止';
+                statusBadge.textContent = '⏹ 播放结束';
                 statusBadge.className = 'status-badge offline';
-                songTitle.textContent = '无法继续播放';
+                songTitle.textContent = '今日节目已结束';
                 songTitle.className = 'no-song';
                 songArtist.textContent = '';
                 songIndex.textContent = '—';
@@ -844,9 +702,15 @@
             let offsetSec = 0;
             if (now > nextTrack.startTime) {
                 offsetSec = (now - nextTrack.startTime) / 1000;
-                if (offsetSec > nextTrack.durationSec || offsetSec < 0) offsetSec = 0;
+                // 如果偏移超过歌曲时长，说明整首歌已错过，重置到开头并临时调整时间基准
+                if (offsetSec >= nextTrack.durationSec) {
+                    offsetSec = 0;
+                    // 临时修正开始时间，防止再次立即触发
+                    nextTrack.startTime = now;
+                    nextTrack.endTime = now + nextTrack.durationSec * 1000;
+                }
             }
-            playTrackAt(nextIndex, offsetSec);
+            playTrackAt(nextIndex, Math.max(0, offsetSec));
         }
 
         function stopPlayback() {
@@ -858,6 +722,7 @@
             switchTimeoutId = syncIntervalId = progressAnimFrameId = null;
             currentTrackIndex = -1;
             currentTrackStartTime = currentTrackEndTime = null;
+            consecutiveSwitchCount = 0;
             progressBar.style.width = '0%';
             progressCurrent.textContent = '00:00';
             progressTotal.textContent = '00:00';
@@ -870,6 +735,7 @@
                 return;
             }
             isPoweredOn = true;
+            consecutiveSwitchCount = 0;
             btnPower.classList.add('on');
             btnPower.textContent = '📻';
             statusBadge.textContent = '🟢 直播中';
