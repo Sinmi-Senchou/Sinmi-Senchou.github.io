@@ -227,16 +227,19 @@
 
         .controls-row {
             display: flex; align-items: center; justify-content: center;
-            gap: 16px; margin-bottom: 12px; flex-wrap: wrap;
+            gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
         }
-        .btn-power {
+        .btn-power, .btn-calibrate {
             width: 56px; height: 56px; border-radius: 50%;
             border: 2px solid rgba(255,255,255,0.15);
-            background: rgba(0,0,0,0.4); color: #fff; font-size: 1.5rem;
+            background: rgba(0,0,0,0.4); color: #fff; font-size: 1.2rem;
             cursor: pointer; transition: all 0.3s;
             display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
         }
-        .btn-power:hover {
+        .btn-power { font-size: 1.5rem; }
+        .btn-calibrate { font-size: 1.3rem; }
+        .btn-power:hover, .btn-calibrate:hover {
             border-color: var(--accent);
             box-shadow: 0 0 20px rgba(42,161,152,0.35);
             transform: scale(1.04);
@@ -246,6 +249,7 @@
             box-shadow: 0 0 18px rgba(42,161,152,0.5);
             background: rgba(42,161,152,0.12);
         }
+        .btn-calibrate:active { transform: scale(0.95); }
         .volume-slider-container { display: flex; align-items: center; gap: 8px; }
         .volume-icon { font-size: 1.2rem; color: var(--text-secondary); }
         .volume-slider {
@@ -299,8 +303,8 @@
         }
         .schedule-table .time-col { font-family: var(--font-mono); color: var(--accent); width: 70px; }
         .schedule-table .dur-col { font-family: var(--font-mono); color: var(--text-secondary); width: 55px; text-align: center; }
-        .schedule-table .title-col { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-        .schedule-table .artist-col { color: var(--text-secondary); max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+        .schedule-table .title-col { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+        .schedule-table .artist-col { color: var(--text-secondary); max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
 
         .message-toast {
             position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
@@ -324,7 +328,8 @@
             .freq-number { font-size: 2.4rem; }
             .song-title { font-size: 1.1rem; }
             .now-playing-section { padding: 14px 12px; min-height: 70px; }
-            .btn-power { width: 46px; height: 46px; font-size: 1.2rem; }
+            .btn-power, .btn-calibrate { width: 46px; height: 46px; font-size: 1.2rem; }
+            .btn-calibrate { font-size: 1rem; }
             .volume-slider { width: 55px; }
             .schedule-table { font-size: 0.68rem; }
             .schedule-table th, .schedule-table td { padding: 5px 6px; }
@@ -345,7 +350,7 @@
     <div class="frequency-display">
         <div class="freq-label">F R E Q U E N C Y</div>
         <div class="freq-number">
-            603<span style="font-size:0.7em;">.</span>37 <span class="freq-unit">MHz</span>
+            60<span style="font-size:0.7em;">.</span>3 <span class="freq-unit">MHz</span>
         </div>
     </div>
 
@@ -373,6 +378,7 @@
 
     <div class="controls-row">
         <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
+        <button class="btn-calibrate" id="btnCalibrate" title="手动校准到当前时间">⏱</button>
         <div class="volume-slider-container">
             <span class="volume-icon">🔈</span>
             <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75" title="音量">
@@ -381,7 +387,7 @@
     </div>
 
     <div class="schedule-toggle" id="scheduleToggle">
-        📋 播放时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
+        📋 未来2小时时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
     </div>
     <div class="schedule-table-wrapper" id="scheduleWrapper">
         <table class="schedule-table" id="scheduleTable">
@@ -408,27 +414,25 @@
     (function() {
         // ==================== 配置区 ====================
         const MUSIC_PATH_PREFIX = 'music/';
-
-        // 电台第一首歌的开始时间（本地时间）
         const RADIO_START = new Date(2026, 6, 29, 0, 0, 0); // 2026年7月29日 00:00:00
 
-        // ★★★ 手动播放列表（代替CSV） ★★★
-        // 格式：[文件名, 时长, 歌曲名, 艺术家]
+        // ★ 手动播放列表（代替CSV） ★
         const manualPlaylist = [
             ['DDBY - 流星阶段.mp3', '03:33', '流星阶段', 'DDBY'],
             ['ginkiha - 聖輦船の風景.mp3', '03:53', '聖輦船の風景', 'ginkiha'],
-            // 可以在这里添加更多歌曲
+            // 继续添加歌曲...
         ];
 
         const LOOP_PLAYLIST = true;
-        const SYNC_INTERVAL = 15000;
-        const MAX_DRIFT_SECONDS = 2.0;
         const PRELOAD_BEFORE_END = 12;
-        const MAX_CONSECUTIVE_SWITCHES = 5; // 防止无限切换
+        const SCHEDULE_WINDOW_HOURS = 2; // 未来显示的小时数
+        const SCHEDULE_REFRESH_INTERVAL = 60000; // 时间表刷新间隔（毫秒）
+        const MAX_CONSECUTIVE_SWITCHES = 5;
 
         // ==================== DOM引用 ====================
         const audioPlayer = document.getElementById('audioPlayer');
         const btnPower = document.getElementById('btnPower');
+        const btnCalibrate = document.getElementById('btnCalibrate');
         const volumeSlider = document.getElementById('volumeSlider');
         const volumeValue = document.getElementById('volumeValue');
         const liveDot = document.getElementById('liveDot');
@@ -457,11 +461,11 @@
         let currentTrackStartTime = null;
         let currentTrackEndTime = null;
         let switchTimeoutId = null;
-        let syncIntervalId = null;
         let progressAnimFrameId = null;
+        let scheduleRefreshIntervalId = null;
         let preloadAudio = null;
         let toastTimeoutId = null;
-        let consecutiveSwitchCount = 0; // 连续切换计数器
+        let consecutiveSwitchCount = 0;
 
         // ==================== 工具函数 ====================
         function parseDuration(durStr) {
@@ -518,7 +522,7 @@
             }, 3500);
         }
 
-        // ==================== 播放列表初始化 ====================
+        // ==================== 播放列表构建 ====================
         function buildPlaylistFromManual() {
             playlist = manualPlaylist.map(row => {
                 const filename = row[0] || '';
@@ -529,8 +533,7 @@
             }).filter(t => t.filename && t.durationSec > 0);
 
             if (playlist.length === 0) {
-                showToast('❌ 播放列表为空，请检查手动配置', true);
-                scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#e74c3c;">列表为空</td></tr>';
+                showToast('❌ 播放列表为空，请检查配置', true);
                 return false;
             }
             return true;
@@ -547,7 +550,7 @@
             }
         }
 
-        // ==================== 核心定位逻辑 ====================
+        // ==================== 定位当前播放位置 ====================
         function findTrackAtTime(timestampMs) {
             const radioStartMs = RADIO_START.getTime();
             if (timestampMs < radioStartMs) {
@@ -626,7 +629,6 @@
             const remainingMs = currentTrackEndTime - Date.now();
 
             if (remainingMs <= 0) {
-                // 立即切换，但使用 setTimeout 避免同步递归，并检查切换次数
                 if (consecutiveSwitchCount >= MAX_CONSECUTIVE_SWITCHES) {
                     console.error('[电台] 连续切换次数过多，停止切换');
                     stopPlayback();
@@ -635,19 +637,14 @@
                 }
                 consecutiveSwitchCount++;
                 switchTimeoutId = setTimeout(() => {
-                    if (isPoweredOn && currentTrackIndex >= 0) {
-                        switchToNextTrack();
-                    }
+                    if (isPoweredOn && currentTrackIndex >= 0) switchToNextTrack();
                 }, 0);
                 return;
             }
 
-            // 正常情况，重置连续切换计数
             consecutiveSwitchCount = 0;
             switchTimeoutId = setTimeout(() => {
-                if (isPoweredOn && currentTrackIndex >= 0) {
-                    switchToNextTrack();
-                }
+                if (isPoweredOn && currentTrackIndex >= 0) switchToNextTrack();
             }, remainingMs + 50);
             schedulePreload(remainingMs);
         }
@@ -681,7 +678,6 @@
             if (!isPoweredOn) return;
             const nextIndex = getNextTrackIndex();
             if (nextIndex < 0) {
-                // 播放列表结束
                 stopPlayback();
                 statusBadge.textContent = '⏹ 播放结束';
                 statusBadge.className = 'status-badge offline';
@@ -702,10 +698,8 @@
             let offsetSec = 0;
             if (now > nextTrack.startTime) {
                 offsetSec = (now - nextTrack.startTime) / 1000;
-                // 如果偏移超过歌曲时长，说明整首歌已错过，重置到开头并临时调整时间基准
                 if (offsetSec >= nextTrack.durationSec) {
                     offsetSec = 0;
-                    // 临时修正开始时间，防止再次立即触发
                     nextTrack.startTime = now;
                     nextTrack.endTime = now + nextTrack.durationSec * 1000;
                 }
@@ -717,9 +711,8 @@
             audioPlayer.pause();
             audioPlayer.src = '';
             if (switchTimeoutId) clearTimeout(switchTimeoutId);
-            if (syncIntervalId) clearInterval(syncIntervalId);
             if (progressAnimFrameId) cancelAnimationFrame(progressAnimFrameId);
-            switchTimeoutId = syncIntervalId = progressAnimFrameId = null;
+            switchTimeoutId = progressAnimFrameId = null;
             currentTrackIndex = -1;
             currentTrackStartTime = currentTrackEndTime = null;
             consecutiveSwitchCount = 0;
@@ -729,9 +722,33 @@
             updateScheduleTableHighlight();
         }
 
+        // ==================== 手动校准功能（替代自动同步） ====================
+        function manualCalibrate() {
+            if (!isPoweredOn) {
+                showToast('请先打开收音机', true);
+                return;
+            }
+            const pos = getCurrentPlaybackPosition();
+            if (pos.pastEnd) {
+                showToast('⏹ 节目已结束', true);
+                return;
+            }
+            if (pos.beforeStart && !LOOP_PLAYLIST) {
+                showToast('⏳ 电台尚未开播', true);
+                return;
+            }
+
+            // 跳转到理论位置
+            playTrackAt(pos.trackIndex, pos.offsetSec);
+            // 刷新时间表
+            renderScheduleTable();
+            showToast(`⏱ 已校准至 ${formatTime(new Date())} 对应位置`);
+        }
+
+        // ==================== 开机/关机 ====================
         function powerOn() {
             if (playlist.length === 0) {
-                showToast('⚠️ 播放列表为空，请检查代码配置', true);
+                showToast('⚠️ 播放列表为空', true);
                 return;
             }
             isPoweredOn = true;
@@ -771,8 +788,8 @@
             }
 
             playTrackAt(pos.trackIndex, pos.offsetSec);
-            startSyncTimer();
             startProgressUpdater();
+            startScheduleRefresher();
         }
 
         function powerOff() {
@@ -784,6 +801,8 @@
             liveDot.style.animation = 'none';
             liveDot.style.background = '#888';
             stopPlayback();
+            if (scheduleRefreshIntervalId) clearInterval(scheduleRefreshIntervalId);
+            scheduleRefreshIntervalId = null;
             songTitle.textContent = '按下电源键开启收音机';
             songTitle.className = 'no-song';
             songArtist.textContent = '';
@@ -793,54 +812,101 @@
             updateScheduleTableHighlight();
         }
 
-        function startSyncTimer() {
-            if (syncIntervalId) clearInterval(syncIntervalId);
-            syncIntervalId = setInterval(() => {
-                if (!isPoweredOn || currentTrackIndex < 0) return;
-                syncPlaybackPosition();
-            }, SYNC_INTERVAL);
+        // ==================== 时间表刷新（未来2小时） ====================
+        function startScheduleRefresher() {
+            if (scheduleRefreshIntervalId) clearInterval(scheduleRefreshIntervalId);
+            scheduleRefreshIntervalId = setInterval(() => {
+                if (isPoweredOn) renderScheduleTable();
+            }, SCHEDULE_REFRESH_INTERVAL);
         }
 
-        function syncPlaybackPosition() {
-            if (!isPoweredOn || currentTrackIndex < 0 || playlist.length === 0) return;
+        function renderScheduleTable() {
+            if (playlist.length === 0) {
+                scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">暂无数据</td></tr>';
+                return;
+            }
+
             const now = Date.now();
-            const pos = findTrackAtTime(now);
-            if (pos.pastEnd && !LOOP_PLAYLIST) {
-                stopPlayback();
-                statusBadge.textContent = '⏹ 播放结束';
-                statusBadge.className = 'status-badge offline';
-                return;
+            const windowEnd = now + SCHEDULE_WINDOW_HOURS * 3600 * 1000;
+            let rows = [];
+            let foundCurrent = false;
+
+            // 考虑到循环，我们需要遍历多个周期
+            const totalMs = totalPlaylistDuration * 1000;
+            const startCycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
+            // 检查前后几个周期以确保覆盖窗口
+            for (let cycle = startCycle - 1; cycle <= startCycle + 1; cycle++) {
+                if (cycle < 0 && !LOOP_PLAYLIST) continue;
+                if (cycle > 0 && !LOOP_PLAYLIST) break;
+
+                for (let i = 0; i < playlist.length; i++) {
+                    const track = playlist[i];
+                    let startMs, endMs;
+                    if (LOOP_PLAYLIST && totalMs > 0) {
+                        startMs = track.startTime + cycle * totalMs;
+                        endMs = track.endTime + cycle * totalMs;
+                    } else {
+                        startMs = track.startTime;
+                        endMs = track.endTime;
+                    }
+
+                    // 只显示与窗口有交集的部分
+                    if (endMs <= now || startMs >= windowEnd) continue;
+
+                    const startDate = new Date(startMs);
+                    const timeStr = formatTime(startDate);
+                    const durStr = formatSeconds(track.durationSec);
+                    const isNowPlaying = isPoweredOn && i === currentTrackIndex && 
+                                        ( (LOOP_PLAYLIST && cycle === startCycle) || (!LOOP_PLAYLIST) );
+                    if (isNowPlaying) foundCurrent = true;
+
+                    rows.push({
+                        startMs,
+                        timeStr,
+                        durStr,
+                        title: track.title,
+                        artist: track.artist,
+                        isNowPlaying,
+                        index: i
+                    });
+                }
             }
-            if (pos.trackIndex !== currentTrackIndex) {
-                playTrackAt(pos.trackIndex, pos.offsetSec);
-                return;
+
+            // 排序
+            rows.sort((a, b) => a.startMs - b.startMs);
+
+            if (rows.length === 0) {
+                scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">未来2小时无节目</td></tr>';
+            } else {
+                let html = '';
+                rows.forEach(row => {
+                    const rowClass = row.isNowPlaying ? ' class="now-playing-row"' : '';
+                    html += `<tr${rowClass}>
+                        <td class="time-col">${row.timeStr}</td>
+                        <td class="dur-col">${row.durStr}</td>
+                        <td class="title-col" title="${escapeHtml(row.title)}">${escapeHtml(row.title)}</td>
+                        <td class="artist-col" title="${escapeHtml(row.artist)}">${escapeHtml(row.artist)}</td>
+                    </tr>`;
+                });
+                scheduleTbody.innerHTML = html;
             }
-            const drift = Math.abs(pos.offsetSec - audioPlayer.currentTime);
-            if (drift > MAX_DRIFT_SECONDS) {
-                audioPlayer.currentTime = pos.offsetSec;
-            }
+
+            updateScheduleTableHighlight();
         }
 
-        function startProgressUpdater() {
-            if (progressAnimFrameId) cancelAnimationFrame(progressAnimFrameId);
-            function update() {
-                if (!isPoweredOn || currentTrackIndex < 0) {
-                    progressAnimFrameId = requestAnimationFrame(update);
-                    return;
-                }
-                const track = playlist[currentTrackIndex];
-                if (!track) {
-                    progressAnimFrameId = requestAnimationFrame(update);
-                    return;
-                }
-                const elapsedInTrack = (Date.now() - currentTrackStartTime) / 1000;
-                const clamped = Math.max(0, Math.min(elapsedInTrack, track.durationSec));
-                progressBar.style.width = (track.durationSec > 0 ? (clamped / track.durationSec) * 100 : 0) + '%';
-                progressCurrent.textContent = formatSeconds(clamped);
-                progressTotal.textContent = formatSeconds(track.durationSec);
-                progressAnimFrameId = requestAnimationFrame(update);
-            }
-            progressAnimFrameId = requestAnimationFrame(update);
+        function updateScheduleTableHighlight() {
+            // 高亮由 renderScheduleTable 直接处理，此函数保留作为兼容
+            const rows = scheduleTbody.querySelectorAll('tr');
+            rows.forEach((row) => {
+                const index = parseInt(row.dataset.index);
+                row.classList.toggle('now-playing-row', !isNaN(index) && index === currentTrackIndex && isPoweredOn);
+            });
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
         }
 
         // ==================== UI更新 ====================
@@ -871,46 +937,37 @@
             upNextTime.textContent = formatTime(new Date(nextStartMs));
         }
 
-        function updateScheduleTableHighlight() {
-            const rows = scheduleTbody.querySelectorAll('tr');
-            rows.forEach((row, i) => {
-                row.classList.toggle('now-playing-row', i === currentTrackIndex && isPoweredOn);
-            });
-        }
-
-        function renderScheduleTable() {
-            if (playlist.length === 0) {
-                scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">暂无数据</td></tr>';
-                return;
-            }
-            let html = '';
-            playlist.forEach((track, i) => {
-                const startTimeStr = formatTime(new Date(track.startTime));
-                const durStr = formatSeconds(track.durationSec);
-                html += `<tr data-index="${i}">
-                    <td class="time-col">${startTimeStr}</td>
-                    <td class="dur-col">${durStr}</td>
-                    <td class="title-col" title="${escapeHtml(track.title)}">${escapeHtml(track.title)}</td>
-                    <td class="artist-col" title="${escapeHtml(track.artist)}">${escapeHtml(track.artist)}</td>
-                </tr>`;
-            });
-            scheduleTbody.innerHTML = html;
-            updateScheduleTableHighlight();
-        }
-
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
         function updateClock() {
             const now = new Date();
             clockTime.textContent = formatTime(now) + ' · ' + now.toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
         }
 
+        function startProgressUpdater() {
+            if (progressAnimFrameId) cancelAnimationFrame(progressAnimFrameId);
+            function update() {
+                if (!isPoweredOn || currentTrackIndex < 0) {
+                    progressAnimFrameId = requestAnimationFrame(update);
+                    return;
+                }
+                const track = playlist[currentTrackIndex];
+                if (!track) {
+                    progressAnimFrameId = requestAnimationFrame(update);
+                    return;
+                }
+                const elapsedInTrack = (Date.now() - currentTrackStartTime) / 1000;
+                const clamped = Math.max(0, Math.min(elapsedInTrack, track.durationSec));
+                progressBar.style.width = (track.durationSec > 0 ? (clamped / track.durationSec) * 100 : 0) + '%';
+                progressCurrent.textContent = formatSeconds(clamped);
+                progressTotal.textContent = formatSeconds(track.durationSec);
+                progressAnimFrameId = requestAnimationFrame(update);
+            }
+            progressAnimFrameId = requestAnimationFrame(update);
+        }
+
         // ==================== 事件绑定 ====================
         btnPower.addEventListener('click', () => isPoweredOn ? powerOff() : powerOn());
+        btnCalibrate.addEventListener('click', manualCalibrate);
+
         volumeSlider.addEventListener('input', () => {
             const vol = parseInt(volumeSlider.value);
             volumeValue.textContent = vol + '%';
@@ -919,7 +976,7 @@
 
         audioPlayer.addEventListener('error', () => {
             const track = playlist[currentTrackIndex];
-            showToast(`⚠️ 无法播放：${track?.title || '未知歌曲'}，请检查文件路径`, true);
+            showToast(`⚠️ 无法播放：${track?.title || '未知歌曲'}`, true);
             if (isPoweredOn && currentTrackIndex >= 0) {
                 setTimeout(() => { if (isPoweredOn) switchToNextTrack(); }, 2000);
             }
@@ -934,10 +991,12 @@
         scheduleToggle.addEventListener('click', () => {
             const isOpen = scheduleWrapper.classList.toggle('open');
             scheduleArrow.classList.toggle('open', isOpen);
+            if (isOpen) renderScheduleTable(); // 展开时刷新一次
         });
 
         document.addEventListener('keydown', (e) => {
             if (e.key === ' ') { e.preventDefault(); btnPower.click(); }
+            if (e.key === 'c' || e.key === 'C') { e.preventDefault(); manualCalibrate(); }
             if (e.key === 'ArrowUp') { e.preventDefault(); volumeSlider.value = Math.min(100, +volumeSlider.value + 5); volumeSlider.dispatchEvent(new Event('input')); }
             if (e.key === 'ArrowDown') { e.preventDefault(); volumeSlider.value = Math.max(0, +volumeSlider.value - 5); volumeSlider.dispatchEvent(new Event('input')); }
             if (e.key.toLowerCase() === 'm') {
@@ -951,13 +1010,7 @@
             if (preloadAudio) { preloadAudio.src = ''; preloadAudio = null; }
         });
 
-        document.addEventListener('visibilitychange', () => {
-            if (document.visibilityState === 'visible' && isPoweredOn) {
-                setTimeout(() => { if (isPoweredOn) syncPlaybackPosition(); }, 300);
-            }
-        });
-
-        // ==================== 启动 ====================
+        // ==================== 初始化 ====================
         function init() {
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
             volumeValue.textContent = volumeSlider.value + '%';
@@ -968,7 +1021,7 @@
                 buildSchedule();
                 renderScheduleTable();
                 updateUpNextDisplay();
-                showToast(`✅ 已加载 ${playlist.length} 首歌曲，电台就绪`);
+                showToast(`✅ 已加载 ${playlist.length} 首歌曲，点击电源按钮开播`);
             }
         }
         init();
