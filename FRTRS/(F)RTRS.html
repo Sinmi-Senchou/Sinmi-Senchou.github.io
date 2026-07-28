@@ -81,7 +81,6 @@
             justify-content: center;
             padding: 20px;
             user-select: none;
-            -webkit-user-select: none;
         }
         .radio-device {
             background: var(--panel-bg);
@@ -122,7 +121,7 @@
         .progress-bar-outer { height: 6px; background: var(--progress-bg); border-radius: 3px; overflow: hidden; }
         .progress-bar-inner { height: 100%; background: linear-gradient(90deg, #1f5c5c, #2aa198, #4db8a8); border-radius: 3px; transition: width 0.9s linear; position: relative; }
         .progress-bar-inner::after { content: ''; position: absolute; right: 0; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; border-radius: 50%; background: #5ec4b4; box-shadow: 0 0 10px rgba(42,161,152,0.7); opacity: 0.9; }
-        .up-next { background: rgba(0,0,0,0.15); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; border: 1px solid transparent; }
+        .up-next { background: rgba(0,0,0,0.15); border-radius: 10px; padding: 10px 14px; margin-bottom: 14px; font-size: 0.8rem; color: var(--text-secondary); display: flex; align-items: center; gap: 8px; }
         .up-next-icon { font-size: 1rem; }
         .up-next-info { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .up-next-time { font-family: var(--font-mono); font-size: 0.73rem; color: var(--accent); white-space: nowrap; }
@@ -132,8 +131,8 @@
         .btn-power.on { border-color: var(--accent); box-shadow: 0 0 18px rgba(42,161,152,0.5); background: rgba(42,161,152,0.12); }
         .volume-slider-container { display: flex; align-items: center; gap: 8px; }
         .volume-icon { font-size: 1.2rem; color: var(--text-secondary); }
-        .volume-slider { -webkit-appearance: none; appearance: none; width: 80px; height: 5px; border-radius: 3px; background: var(--progress-bg); outline: none; cursor: pointer; }
-        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #2aa198; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 8px rgba(42,161,152,0.6); }
+        .volume-slider { -webkit-appearance: none; width: 80px; height: 5px; border-radius: 3px; background: var(--progress-bg); outline: none; cursor: pointer; }
+        .volume-slider::-webkit-slider-thumb { -webkit-appearance: none; width: 20px; height: 20px; border-radius: 50%; background: #2aa198; cursor: pointer; border: 2px solid #fff; box-shadow: 0 0 8px rgba(42,161,152,0.6); }
         .volume-value { font-family: var(--font-mono); font-size: 0.7rem; color: var(--text-secondary); width: 28px; text-align: center; }
         .schedule-toggle { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: 0.78rem; color: var(--text-secondary); cursor: pointer; padding: 8px; opacity: 0.7; transition: opacity 0.2s; }
         .schedule-toggle:hover { opacity: 1; color: var(--accent); }
@@ -143,39 +142,31 @@
         .schedule-table-wrapper.open { max-height: 400px; margin-top: 10px; }
         .schedule-table { width: 100%; border-collapse: collapse; font-size: 0.73rem; background: rgba(0,0,0,0.2); border-radius: 10px; display: block; max-height: 280px; overflow-y: auto; }
         .schedule-table thead { position: sticky; top: 0; z-index: 1; }
-        .schedule-table th { background: rgba(0,0,0,0.6); color: var(--accent); font-weight: 500; padding: 8px 10px; text-align: left; font-size: 0.68rem; text-transform: uppercase; white-space: nowrap; }
+        .schedule-table th { background: rgba(0,0,0,0.6); color: var(--accent); font-weight: 500; padding: 8px 10px; text-align: left; font-size: 0.68rem; text-transform: uppercase; }
         .schedule-table td { padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04); white-space: nowrap; }
         .schedule-table tr.now-playing-row { background: rgba(42,161,152,0.12); font-weight: 600; color: #c0f0e8; }
-        .schedule-table .time-col { font-family: var(--font-mono); color: var(--accent); width: 70px; }
-        .schedule-table .dur-col { font-family: var(--font-mono); color: var(--text-secondary); width: 55px; text-align: center; }
-        .schedule-table .title-col { max-width: 180px; overflow: hidden; text-overflow: ellipsis; }
-        .schedule-table .artist-col { color: var(--text-secondary); max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
         .message-toast { position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #1c2e2e; color: #2aa198; padding: 10px 20px; border-radius: 20px; font-size: 0.85rem; z-index: 100; border: 1px solid rgba(42,161,152,0.3); box-shadow: 0 8px 24px rgba(0,0,0,0.5); animation: slideDown 0.4s; max-width: 90vw; text-align: center; }
         @keyframes slideDown { from { opacity: 0; transform: translateX(-50%) translateY(-30px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
         .message-toast.error { background: #2b1e1e; color: #e74c3c; border-color: rgba(231,76,60,0.4); }
         @media (max-width: 480px) {
-            .radio-device { padding: 20px 14px 16px; border-radius: 20px; }
+            .radio-device { padding: 20px 14px 16px; }
             .freq-number { font-size: 2.4rem; }
-            .song-title { font-size: 1.1rem; }
-            .now-playing-section { padding: 14px 12px; min-height: 70px; }
-            .btn-power { width: 46px; height: 46px; font-size: 1.2rem; }
+            .btn-power { width: 46px; height: 46px; }
             .volume-slider { width: 55px; }
-            .schedule-table { font-size: 0.68rem; }
-            .schedule-table th, .schedule-table td { padding: 5px 6px; }
         }
     </style>
 </head>
 <body>
-<div class="radio-device" id="radioDevice">
+<div class="radio-device">
     <div class="top-bar">
-        <div class="live-clock" id="liveClock"><span class="live-dot" id="liveDot"></span><span id="clockTime">--:--:--</span></div>
+        <div class="live-clock"><span class="live-dot" id="liveDot"></span><span id="clockTime">--:--:--</span></div>
         <div class="status-badge offline" id="statusBadge">🔴 已关机</div>
     </div>
     <div class="frequency-display">
         <div class="freq-label">F R E Q U E N C Y</div>
         <div class="freq-number">98<span style="font-size:0.7em;">.</span>7 <span class="freq-unit">MHz</span></div>
     </div>
-    <div class="now-playing-section" id="nowPlayingSection">
+    <div class="now-playing-section">
         <div class="song-index" id="songIndex">—</div>
         <div class="song-title no-song" id="songTitle">按下电源键开启收音机</div>
         <div class="song-artist" id="songArtist"></div>
@@ -184,22 +175,22 @@
         <div class="progress-time-row"><span id="progressCurrent">00:00</span><span id="progressTotal">00:00</span></div>
         <div class="progress-bar-outer"><div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div></div>
     </div>
-    <div class="up-next" id="upNext">
+    <div class="up-next">
         <span class="up-next-icon">⏭</span><span class="up-next-info" id="upNextInfo">—</span><span class="up-next-time" id="upNextTime"></span>
     </div>
     <div class="controls-row">
-        <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
+        <button class="btn-power" id="btnPower">📻</button>
         <div class="volume-slider-container">
             <span class="volume-icon">🔈</span>
-            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75" title="音量">
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75">
             <span class="volume-value" id="volumeValue">75%</span>
         </div>
     </div>
-    <div class="schedule-toggle" id="scheduleToggle">📋 播放时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span></div>
+    <div class="schedule-toggle" id="scheduleToggle">📋 播放时间表 <span class="schedule-arrow">▼</span></div>
     <div class="schedule-table-wrapper" id="scheduleWrapper">
-        <table class="schedule-table" id="scheduleTable">
+        <table class="schedule-table">
             <thead><tr><th class="time-col">开始时间</th><th class="dur-col">时长</th><th class="title-col">歌曲</th><th class="artist-col">艺术家</th></tr></thead>
-            <tbody id="scheduleTbody"><tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr></tbody>
+            <tbody id="scheduleTbody"><tr><td colspan="4">加载中...</td></tr></tbody>
         </table>
     </div>
 </div>
@@ -209,208 +200,249 @@
 <script>
     
     (function() {
+        console.log('🚀 电台启动');
         const MUSIC_PATH_PREFIX = 'music/';
-        const RADIO_START = new Date(2026, 6, 29, 0, 0, 0);
+        const RADIO_START = new Date(2026, 6, 29, 0, 0, 0); // 2026-07-29 00:00:00
         const manualPlaylist = [
             ['DDBY - 流星阶段.mp3', '03:33', '流星阶段', 'DDBY'],
-            // 添加更多歌曲...
+            ['ginkiha - 聖輦船の風景.mp3', '03:53', '聖輦船の風景', 'ginkiha'],
         ];
-        const LOOP_PLAYLIST = true;
+        const LOOP = true;
         const SYNC_INTERVAL = 15000;
-        const MAX_DRIFT_SECONDS = 2.0;
-        const PRELOAD_BEFORE_END = 12;
 
-        const audioPlayer = document.getElementById('audioPlayer');
+        const audio = document.getElementById('audioPlayer');
         const btnPower = document.getElementById('btnPower');
-        const volumeSlider = document.getElementById('volumeSlider');
-        const volumeValue = document.getElementById('volumeValue');
+        const volSlider = document.getElementById('volumeSlider');
+        const volVal = document.getElementById('volumeValue');
         const liveDot = document.getElementById('liveDot');
-        const clockTime = document.getElementById('clockTime');
+        const clockEl = document.getElementById('clockTime');
         const statusBadge = document.getElementById('statusBadge');
-        const songIndex = document.getElementById('songIndex');
+        const songIdx = document.getElementById('songIndex');
         const songTitle = document.getElementById('songTitle');
         const songArtist = document.getElementById('songArtist');
-        const progressBar = document.getElementById('progressBar');
-        const progressCurrent = document.getElementById('progressCurrent');
-        const progressTotal = document.getElementById('progressTotal');
+        const progBar = document.getElementById('progressBar');
+        const progCur = document.getElementById('progressCurrent');
+        const progTotal = document.getElementById('progressTotal');
         const upNextInfo = document.getElementById('upNextInfo');
         const upNextTime = document.getElementById('upNextTime');
-        const scheduleToggle = document.getElementById('scheduleToggle');
-        const scheduleArrow = document.getElementById('scheduleArrow');
-        const scheduleWrapper = document.getElementById('scheduleWrapper');
-        const scheduleTbody = document.getElementById('scheduleTbody');
+        const schedWrapper = document.getElementById('scheduleWrapper');
+        const schedArrow = document.querySelector('.schedule-arrow');
+        const schedTbody = document.getElementById('scheduleTbody');
         const toastContainer = document.getElementById('toastContainer');
 
-        let playlist = [];
-        let totalPlaylistDuration = 0;
-        let isPoweredOn = false;
-        let currentTrackIndex = -1;
-        let currentTrackStartTime = null;
-        let currentTrackEndTime = null;
-        let switchTimeoutId = null;
-        let syncIntervalId = null;
-        let progressAnimFrameId = null;
-        let preloadAudio = null;
-        let toastTimeoutId = null;
-        let pendingPlayRequest = null;
+        let playlist = [], totalDuration = 0;
+        let power = false;
+        let curIdx = -1, curStart = null, curEnd = null;
+        let switchTimer = null, syncTimer = null, progFrame = null;
+        let preloadAudio = null, toastTimer = null;
+        let pendingRequest = null;
 
-        function parseDuration(durStr) { /* ... 同上 ... */ }
-        function formatSeconds(s) { /* ... 同上 ... */ }
-        function formatTime(d) { /* ... 同上 ... */ }
-        function formatDateTime(d) { /* ... 同上 ... */ }
+        // 工具函数
+        const parseDur = s => { const m = s.match(/^(\d+):(\d+)$/); return m ? (+m[1]*60 + +m[2]) : parseFloat(s)||0; };
+        const fmtSec = t => { const s = Math.floor(t); const m = Math.floor(s/60); const sec = s%60; return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`; };
+        const fmtTime = d => d ? `${String(d.getHours()).padStart(2,'0')}:${String(d.getMinutes()).padStart(2,'0')}:${String(d.getSeconds()).padStart(2,'0')}` : '--:--:--';
+        const toast = (msg, err) => {
+            if (toastTimer) clearTimeout(toastTimer);
+            const old = toastContainer.querySelector('.message-toast'); if (old) old.remove();
+            const el = document.createElement('div'); el.className = 'message-toast' + (err ? ' error' : ''); el.textContent = msg;
+            toastContainer.appendChild(el);
+            toastTimer = setTimeout(() => { el.style.opacity='0'; setTimeout(()=>el.remove(),400); }, 3000);
+        };
 
-        // 省略上述辅助函数实现，请从之前的完整代码中复制（这里为了节省长度，实际使用需补全）
-        // 建议直接复制前面调试版中的辅助函数部分，或保留此文件已有的。
+        // 构建播放列表
+        playlist = manualPlaylist.map(r => ({
+            file: r[0], dur: parseDur(r[1]), title: r[2]||r[0], artist: r[3]||'',
+            start: null, end: null
+        })).filter(t => t.file && t.dur>0);
 
-        function showToast(msg, isErr = false) { /* ... */ }
+        if (!playlist.length) { schedTbody.innerHTML = '<tr><td colspan="4">列表为空</td></tr>'; return; }
 
-        function buildPlaylistFromManual() { /* ... */ }
-        function buildSchedule() { /* ... */ }
-        function findTrackAtTime(t) { /* ... */ }
+        // 计算时间表
+        let t = RADIO_START.getTime();
+        playlist.forEach(track => { track.start = t; track.end = t + track.dur*1000; t = track.end; totalDuration += track.dur; });
+        console.log('📅 总时长:', fmtSec(totalDuration));
 
-        function onMetadataLoaded() {
-            if (!pendingPlayRequest) return;
-            const { trackIndex, offsetSec } = pendingPlayRequest;
-            pendingPlayRequest = null;
-            const track = playlist[trackIndex];
-            if (!track) return;
-            audioPlayer.currentTime = Math.min(Math.max(0, offsetSec), track.durationSec);
-            currentTrackIndex = trackIndex;
-            currentTrackStartTime = track.startTime;
-            currentTrackEndTime = track.endTime;
-            updateNowPlayingDisplay();
-            updateUpNextDisplay();
-            updateScheduleTableHighlight();
-            audioPlayer.play().catch(() => {});
-            scheduleNextTrackSwitch();
-            audioPlayer.removeEventListener('error', onLoadError);
-        }
-
-        function onLoadError() {
-            if (!pendingPlayRequest) return;
-            const trackIndex = pendingPlayRequest.trackIndex;
-            pendingPlayRequest = null;
-            audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
-            showToast(`⚠️ 无法加载：${playlist[trackIndex]?.title || '未知歌曲'}`, true);
-            if (isPoweredOn) setTimeout(() => switchToNextTrack(), 2000);
-        }
-
-        function playTrackAt(trackIndex, offsetSec) {
-            if (trackIndex < 0 || trackIndex >= playlist.length) return false;
-            const track = playlist[trackIndex];
-            const absoluteSrc = new URL(MUSIC_PATH_PREFIX + track.filename, window.location.href).href;
-
-            // 如果是当前歌曲且音频已就绪，直接跳转
-            if (trackIndex === currentTrackIndex && audioPlayer.readyState >= 2 && audioPlayer.src === absoluteSrc) {
-                audioPlayer.currentTime = Math.max(0, Math.min(offsetSec, track.durationSec));
-                currentTrackStartTime = track.startTime;
-                currentTrackEndTime = track.endTime;
-                updateNowPlayingDisplay();
-                updateUpNextDisplay();
-                updateScheduleTableHighlight();
-                audioPlayer.play().catch(() => {});
-                scheduleNextTrackSwitch();
-                return true;
-            }
-
-            // 否则重新加载
-            audioPlayer.pause();
-            audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
-            audioPlayer.removeEventListener('error', onLoadError);
-            if (switchTimeoutId) clearTimeout(switchTimeoutId);
-            pendingPlayRequest = { trackIndex, offsetSec };
-
-            audioPlayer.src = '';
-            audioPlayer.addEventListener('loadedmetadata', onMetadataLoaded, { once: true });
-            audioPlayer.addEventListener('error', onLoadError, { once: true });
-            audioPlayer.src = absoluteSrc;
-            audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
-
-            if (audioPlayer.readyState >= 1) {
-                audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
-                audioPlayer.removeEventListener('error', onLoadError);
-                onMetadataLoaded();
-            }
-            return true;
-        }
-
-        function scheduleNextTrackSwitch() {
-            if (switchTimeoutId) clearTimeout(switchTimeoutId);
-            if (currentTrackIndex < 0 || !currentTrackEndTime) return;
-            const remain = currentTrackEndTime - Date.now();
-            if (remain <= 0) {
-                switchToNextTrack();
-                return;
-            }
-            switchTimeoutId = setTimeout(() => switchToNextTrack(), remain + 50);
-            // 预加载...
-        }
-
-        function getNextTrackIndex() {
-            if (playlist.length === 0) return -1;
-            let next = currentTrackIndex + 1;
-            if (next >= playlist.length) return LOOP_PLAYLIST ? 0 : -1;
-            return next;
-        }
-
-        function switchToNextTrack() {
-            if (!isPoweredOn) return;
-            const ni = getNextTrackIndex();
-            if (ni < 0) {
-                stopPlayback();
-                statusBadge.textContent = '⏹ 播放结束'; statusBadge.className = 'status-badge offline';
-                songTitle.textContent = '今日节目已结束'; songTitle.className = 'no-song';
-                return;
-            }
-
-            // 如果是同一首歌，直接循环
-            if (ni === currentTrackIndex) {
-                const now = Date.now();
-                const nt = playlist[ni];
-                let off = 0;
-                if (now > nt.startTime) {
-                    off = (now - nt.startTime) / 1000;
-                    if (off > nt.durationSec) off = 0;
+        // 定位函数
+        function locate(ts) {
+            const start = RADIO_START.getTime();
+            if (ts < start) return { idx:0, sec:0, before:true };
+            let elapsed = ts - start;
+            if (!LOOP && elapsed >= totalDuration*1000) return { idx:-1, sec:0, past:true };
+            const cycle = Math.floor(elapsed / (totalDuration*1000));
+            elapsed %= totalDuration*1000;
+            for (let i=0; i<playlist.length; i++) {
+                const relS = playlist[i].start - start;
+                const relE = playlist[i].end - start;
+                if (elapsed >= relS && elapsed < relE) {
+                    return { idx:i, sec: (elapsed-relS)/1000, cycle };
                 }
-                audioPlayer.currentTime = Math.max(0, off);
-                currentTrackStartTime = nt.startTime;
-                currentTrackEndTime = nt.endTime;
-                updateNowPlayingDisplay();
-                updateUpNextDisplay();
-                scheduleNextTrackSwitch();
-                audioPlayer.play().catch(() => {});
-                return;
             }
+            return { idx:0, sec:0 }; // fallback
+        }
 
-            // 不同歌曲
+        function setTrack(idx, sec) {
+            if (idx < 0 || idx >= playlist.length) return false;
+            const track = playlist[idx];
+            const src = MUSIC_PATH_PREFIX + track.file;
+            console.log(`🎯 setTrack #${idx} "${track.title}" at ${fmtSec(sec)}`);
+
+            // 清理旧计时器和监听
+            if (switchTimer) clearTimeout(switchTimer);
+            audio.pause();
+            audio.removeEventListener('loadedmetadata', onMeta);
+            audio.removeEventListener('error', onErr);
+            pendingRequest = { idx, sec };
+
+            // 强制重新加载
+            audio.src = '';
+            audio.addEventListener('loadedmetadata', onMeta, { once: true });
+            audio.addEventListener('error', onErr, { once: true });
+            audio.src = new URL(src, location.href).href;
+            audio.volume = volSlider.value / 100;
+        }
+
+        function onMeta() {
+            if (!pendingRequest) return;
+            const { idx, sec } = pendingRequest;
+            pendingRequest = null;
+            const track = playlist[idx];
+            const clamped = Math.min(Math.max(0, sec), track.dur);
+            console.log(`🎵 loadedmetadata: currentTime = ${clamped}`);
+            audio.currentTime = clamped;
+            curIdx = idx; curStart = track.start; curEnd = track.end;
+            updateNowPlaying();
+            updateUpNext();
+            highlightTable();
+            const prom = audio.play();
+            if (prom) prom.catch(e => { console.warn('play() rejected:', e.message); });
+            scheduleSwitch();
+        }
+
+        function onErr() {
+            if (!pendingRequest) return;
+            const track = playlist[pendingRequest.idx];
+            pendingRequest = null;
+            console.error('🔥 加载失败:', track.file);
+            toast(`⚠️ 无法加载 ${track.title}`, true);
+            audio.removeEventListener('loadedmetadata', onMeta);
+            if (power) setTimeout(() => { if(power) switchNext(); }, 2000);
+        }
+
+        function scheduleSwitch() {
+            if (switchTimer) clearTimeout(switchTimer);
+            if (curIdx < 0 || !curEnd) return;
+            const remain = curEnd - Date.now();
+            console.log('⏲️ 距离下一首:', fmtSec(remain/1000));
+            if (remain <= 0) { switchNext(); return; }
+            switchTimer = setTimeout(switchNext, remain + 100);
+        }
+
+        function switchNext() {
+            if (!power) return;
+            const nextIdx = (curIdx + 1) % playlist.length;
+            if (!LOOP && nextIdx === 0) {
+                stop(); statusBadge.textContent = '⏹ 结束'; return;
+            }
             const now = Date.now();
-            const nt = playlist[ni];
-            let off = 0;
-            if (now > nt.startTime) {
-                off = (now - nt.startTime) / 1000;
-                if (off > nt.durationSec) off = 0;
+            const next = playlist[nextIdx];
+            let offset = 0;
+            if (now > next.start) offset = Math.min((now - next.start)/1000, next.dur);
+            setTrack(nextIdx, offset);
+        }
+
+        function stop() {
+            audio.pause(); audio.src = '';
+            if (switchTimer) clearTimeout(switchTimer);
+            if (syncTimer) clearInterval(syncTimer);
+            if (progFrame) cancelAnimationFrame(progFrame);
+            curIdx = -1; curStart = curEnd = null;
+            pendingRequest = null;
+        }
+
+        function powerOn() {
+            power = true; btnPower.classList.add('on'); statusBadge.textContent = '🟢 直播中';
+            liveDot.style.animation = 'livePulse 2s infinite';
+            const pos = locate(Date.now());
+            console.log('📍 当前位置:', pos);
+            if (pos.past) { stop(); statusBadge.textContent = '⏹ 结束'; return; }
+            if (pos.before) { toast('电台尚未开播'); return; }
+            setTrack(pos.idx, pos.sec);
+            syncTimer = setInterval(syncPos, SYNC_INTERVAL);
+            startProgress();
+        }
+
+        function powerOff() {
+            power = false; btnPower.classList.remove('on'); statusBadge.textContent = '🔴 已关机';
+            liveDot.style.animation = ''; stop();
+            songTitle.textContent = '按下电源键开启收音机'; songTitle.className = 'no-song';
+        }
+
+        function syncPos() {
+            if (!power || curIdx < 0) return;
+            const pos = locate(Date.now());
+            if (pos.idx !== curIdx) setTrack(pos.idx, pos.sec);
+            else if (Math.abs(pos.sec - audio.currentTime) > 2) {
+                console.log('🔄 同步修正:', fmtSec(pos.sec));
+                audio.currentTime = pos.sec;
             }
-            playTrackAt(ni, Math.max(0, off));
         }
 
-        function stopPlayback() {
-            audioPlayer.pause();
-            audioPlayer.src = '';
-            clearTimeout(switchTimeoutId);
-            clearInterval(syncIntervalId);
-            cancelAnimationFrame(progressAnimFrameId);
-            switchTimeoutId = syncIntervalId = progressAnimFrameId = null;
-            currentTrackIndex = -1;
-            currentTrackStartTime = currentTrackEndTime = null;
-            pendingPlayRequest = null;
-            audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
-            audioPlayer.removeEventListener('error', onLoadError);
-            updateScheduleTableHighlight();
+        function startProgress() {
+            function upd() {
+                if (!power || curIdx < 0) { progFrame = requestAnimationFrame(upd); return; }
+                const track = playlist[curIdx];
+                const elapsed = (Date.now() - curStart) / 1000;
+                const clamped = Math.min(Math.max(0, elapsed), track.dur);
+                progBar.style.width = (clamped/track.dur*100) + '%';
+                progCur.textContent = fmtSec(clamped);
+                progTotal.textContent = fmtSec(track.dur);
+                progFrame = requestAnimationFrame(upd);
+            }
+            progFrame = requestAnimationFrame(upd);
         }
 
-        // 其他函数（powerOn, powerOff, sync, progress 等）保持不变，请从前面版本复制
+        function updateNowPlaying() {
+            if (curIdx < 0) return;
+            const t = playlist[curIdx];
+            songTitle.textContent = t.title; songTitle.className = 'song-title';
+            songArtist.textContent = t.artist;
+            songIdx.textContent = `TRACK ${curIdx+1}/${playlist.length}`;
+        }
 
-        // 初始化...
+        function updateUpNext() {
+            const next = (curIdx+1) % playlist.length;
+            if (!LOOP && next===0) { upNextInfo.textContent = '—'; return; }
+            const n = playlist[next];
+            upNextInfo.textContent = `${n.title} — ${n.artist}`;
+            let start = n.start;
+            if (LOOP && start < Date.now()) {
+                const cycles = Math.floor((Date.now()-start)/(totalDuration*1000)) + 1;
+                start += cycles * totalDuration*1000;
+            }
+            upNextTime.textContent = fmtTime(new Date(start));
+        }
+
+        function highlightTable() {
+            [...schedTbody.rows].forEach((r,i) => r.classList.toggle('now-playing-row', i===curIdx && power));
+        }
+
+        // 渲染时间表
+        schedTbody.innerHTML = playlist.map((t,i) => `<tr data-idx="${i}"><td>${fmtTime(new Date(t.start))}</td><td>${fmtSec(t.dur)}</td><td>${t.title}</td><td>${t.artist}</td></tr>`).join('');
+
+        // 事件绑定
+        btnPower.onclick = () => power ? powerOff() : powerOn();
+        volSlider.oninput = () => { volVal.textContent = volSlider.value+'%'; audio.volume = volSlider.value/100; };
+        document.getElementById('scheduleToggle').onclick = () => {
+            const open = schedWrapper.classList.toggle('open');
+            schedArrow.classList.toggle('open', open);
+        };
+
+        audio.onerror = () => { if (!pendingRequest) { console.error('播放错误'); toast('⚠️ 播放出错', true); } };
+
+        // 时钟
+        setInterval(() => { const d = new Date(); clockEl.textContent = fmtTime(d); }, 1000);
+
+        console.log('✅ 电台就绪，等待开机');
     })();
     
 </script>
