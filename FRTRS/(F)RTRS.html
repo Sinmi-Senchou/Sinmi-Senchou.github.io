@@ -52,7 +52,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>📻 伪实时电台 - 音乐播放器</title>
+    <title>📻 伪实时电台 - 音乐播放器 (调试版)</title>
     <style>
         :root {
             --bg: #0f1a1a;
@@ -210,11 +210,12 @@
 <script>
     
     (function() {
+        console.log('🚀 电台初始化开始');
         const MUSIC_PATH_PREFIX = 'music/';
         const RADIO_START = new Date(2026, 6, 29, 0, 0, 0);
         const manualPlaylist = [
             ['DDBY - 流星阶段.mp3', '03:33', '流星阶段', 'DDBY'],
-            // 在这里添加更多歌曲...
+            // 添加更多歌曲...
         ];
         const LOOP_PLAYLIST = true;
         const SYNC_INTERVAL = 15000;
@@ -287,6 +288,7 @@
         }
 
         function showToast(msg, isErr = false) {
+            console.log(`💬 Toast: ${msg}`);
             if (toastTimeoutId) clearTimeout(toastTimeoutId);
             const old = toastContainer.querySelector('.message-toast');
             if (old) old.remove();
@@ -305,6 +307,7 @@
                 artist: row[3] || '未知艺术家',
                 startTime: null, endTime: null
             })).filter(t => t.filename && t.durationSec > 0);
+            console.log('📋 播放列表构建完成:', playlist);
             return playlist.length > 0;
         }
 
@@ -317,6 +320,7 @@
                 t = track.endTime;
                 totalPlaylistDuration += track.durationSec;
             });
+            console.log('📅 时间表构建完成，总时长:', formatSeconds(totalPlaylistDuration));
         }
 
         function findTrackAtTime(timestampMs) {
@@ -337,13 +341,17 @@
             return { trackIndex:0, offsetSec:0, trackStartMs: playlist[0]?.startTime||startMs, trackEndMs: playlist[0]?.endTime||startMs, cycleNumber:0 };
         }
 
-        // 音频元数据加载完成后的处理
         function onMetadataLoaded() {
-            if (!pendingPlayRequest) return;
+            console.log('🎵 loadedmetadata 事件触发，pendingPlayRequest:', pendingPlayRequest);
+            if (!pendingPlayRequest) {
+                console.warn('⚠️ 没有待处理的播放请求，忽略');
+                return;
+            }
             const { trackIndex, offsetSec } = pendingPlayRequest;
             pendingPlayRequest = null;
             const track = playlist[trackIndex];
             if (!track) return;
+            console.log(`⏩ 设置 currentTime = ${offsetSec} (歌曲时长 ${track.durationSec})`);
             audioPlayer.currentTime = Math.min(Math.max(0, offsetSec), track.durationSec);
             currentTrackIndex = trackIndex;
             currentTrackStartTime = track.startTime;
@@ -351,15 +359,22 @@
             updateNowPlayingDisplay();
             updateUpNextDisplay();
             updateScheduleTableHighlight();
+            console.log('▶️ 尝试播放...');
             const playPromise = audioPlayer.play();
-            if (playPromise) playPromise.catch(() => {});
+            if (playPromise) {
+                playPromise.then(() => {
+                    console.log('✅ 播放成功');
+                }).catch(err => {
+                    console.error('❌ 播放失败:', err.name, err.message);
+                    showToast('⚠️ 播放被阻止，请手动点击播放按钮', true);
+                });
+            }
             scheduleNextTrackSwitch();
-            // 清理不再需要的错误监听
             audioPlayer.removeEventListener('error', onLoadError);
         }
 
-        // 音频加载错误处理
         function onLoadError() {
+            console.error('🔥 音频加载错误! pendingPlayRequest:', pendingPlayRequest);
             if (!pendingPlayRequest) return;
             const trackIndex = pendingPlayRequest.trackIndex;
             const track = playlist[trackIndex];
@@ -367,39 +382,43 @@
             audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
             showToast(`⚠️ 无法加载：${track?.title || '未知歌曲'} (${track?.filename || ''})`, true);
             if (isPoweredOn && trackIndex >= 0) {
-                // 尝试切换到下一首
                 setTimeout(() => { if (isPoweredOn) switchToNextTrack(); }, 2000);
             }
         }
 
-        // 核心：播放指定歌曲的指定位置
         function playTrackAt(trackIndex, offsetSec) {
-            if (trackIndex < 0 || trackIndex >= playlist.length) return false;
+            console.log(`🎯 playTrackAt 调用: trackIndex=${trackIndex}, offsetSec=${offsetSec}`);
+            if (trackIndex < 0 || trackIndex >= playlist.length) {
+                console.error('索引无效');
+                return false;
+            }
             const track = playlist[trackIndex];
             const audioSrc = MUSIC_PATH_PREFIX + track.filename;
+            const absoluteSrc = new URL(audioSrc, window.location.href).href;
+            console.log(`🔗 音频源: ${absoluteSrc}`);
 
-            // 取消之前的等待和监听
+            // 清理
             audioPlayer.pause();
             audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
             audioPlayer.removeEventListener('error', onLoadError);
             if (switchTimeoutId) clearTimeout(switchTimeoutId);
             pendingPlayRequest = { trackIndex, offsetSec };
 
-            // 强制重新加载音频（即使URL相同）
+            // 重置 src 以强制加载
             audioPlayer.src = '';
-            // 绑定新事件
             audioPlayer.addEventListener('loadedmetadata', onMetadataLoaded, { once: true });
             audioPlayer.addEventListener('error', onLoadError, { once: true });
-            // 设置新源（使用绝对路径避免比对问题）
-            audioPlayer.src = new URL(audioSrc, window.location.href).href;
+            audioPlayer.src = absoluteSrc;
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
 
-            // 如果元数据已缓存，立即触发处理
+            console.log(`🔍 当前 readyState: ${audioPlayer.readyState} (0=HAVE_NOTHING, 1=HAVE_METADATA)`);
             if (audioPlayer.readyState >= 1) {
-                // 移除事件监听，手动调用，避免重复触发
+                console.log('⚡ 元数据已就绪，手动触发 onMetadataLoaded');
                 audioPlayer.removeEventListener('loadedmetadata', onMetadataLoaded);
                 audioPlayer.removeEventListener('error', onLoadError);
                 onMetadataLoaded();
+            } else {
+                console.log('⏳ 等待 loadedmetadata 事件...');
             }
             return true;
         }
@@ -408,6 +427,7 @@
             if (switchTimeoutId) clearTimeout(switchTimeoutId);
             if (currentTrackIndex < 0 || !currentTrackEndTime) return;
             const remain = currentTrackEndTime - Date.now();
+            console.log(`⏲️ 下一首切换倒计时: ${formatSeconds(remain/1000)}`);
             if (remain <= 0) { switchToNextTrack(); return; }
             switchTimeoutId = setTimeout(() => switchToNextTrack(), remain + 50);
             const preloadDelay = remain - PRELOAD_BEFORE_END * 1000;
@@ -418,6 +438,7 @@
                         const s = new URL(MUSIC_PATH_PREFIX + playlist[ni].filename, window.location.href).href;
                         if (!preloadAudio) { preloadAudio = new Audio(); preloadAudio.preload='auto'; preloadAudio.volume=0; }
                         if (preloadAudio.src !== s) preloadAudio.src = s;
+                        console.log(`🔄 预加载下一首: ${playlist[ni].title}`);
                     }
                 }, preloadDelay);
             }
@@ -430,6 +451,7 @@
         }
 
         function switchToNextTrack() {
+            console.log('⏩ 切换到下一首');
             if (!isPoweredOn) return;
             const ni = getNextTrackIndex();
             if (ni < 0) {
@@ -449,6 +471,7 @@
         }
 
         function stopPlayback() {
+            console.log('⏹️ 停止播放');
             audioPlayer.pause();
             audioPlayer.src = '';
             if (switchTimeoutId) clearTimeout(switchTimeoutId);
@@ -465,12 +488,14 @@
         }
 
         function powerOn() {
+            console.log('🔘 开机');
             if (playlist.length === 0) { showToast('⚠️ 列表为空', true); return; }
             isPoweredOn = true;
             btnPower.classList.add('on'); btnPower.textContent = '📻';
             statusBadge.textContent = '🟢 直播中'; statusBadge.className = 'status-badge';
             liveDot.style.animation = 'livePulse 2s ease-in-out infinite'; liveDot.style.background = 'var(--success)';
             const pos = findTrackAtTime(Date.now());
+            console.log('📍 当前播放位置:', pos);
             if (pos.pastEnd) {
                 stopPlayback(); statusBadge.textContent = '⏹ 播放结束'; statusBadge.className = 'status-badge offline';
                 songTitle.textContent = '今日节目已结束'; songTitle.className = 'no-song'; return;
@@ -489,6 +514,7 @@
         }
 
         function powerOff() {
+            console.log('🔘 关机');
             isPoweredOn = false;
             btnPower.classList.remove('on'); btnPower.textContent = '📻';
             statusBadge.textContent = '🔴 已关机'; statusBadge.className = 'status-badge offline';
@@ -511,7 +537,10 @@
             if (pos.pastEnd && !LOOP_PLAYLIST) { stopPlayback(); return; }
             if (pos.trackIndex !== currentTrackIndex) { playTrackAt(pos.trackIndex, pos.offsetSec); return; }
             const drift = Math.abs(pos.offsetSec - audioPlayer.currentTime);
-            if (drift > MAX_DRIFT_SECONDS) audioPlayer.currentTime = pos.offsetSec;
+            if (drift > MAX_DRIFT_SECONDS) {
+                console.log(`🔄 同步修正: 偏差 ${drift.toFixed(2)}s, 跳转到 ${formatSeconds(pos.offsetSec)}`);
+                audioPlayer.currentTime = pos.offsetSec;
+            }
         }
 
         function startProgressUpdater() {
@@ -570,23 +599,30 @@
             clockTime.textContent = formatTime(now) + ' · ' + now.toLocaleDateString('zh-CN',{month:'short',day:'numeric'});
         }
 
-        btnPower.addEventListener('click', ()=> isPoweredOn ? powerOff() : powerOn());
+        btnPower.addEventListener('click', ()=> {
+            console.log('🖱️ 电源按钮点击, 当前状态:', isPoweredOn ? 'ON' : 'OFF');
+            isPoweredOn ? powerOff() : powerOn();
+        });
         volumeSlider.addEventListener('input', ()=>{
             const v = parseInt(volumeSlider.value);
             volumeValue.textContent = v+'%';
             audioPlayer.volume = v/100;
         });
 
-        // 全局错误兜底（但加载阶段的错误由 onLoadError 处理，这里只处理播放过程中的异常）
-        audioPlayer.addEventListener('error', ()=>{
-            if (pendingPlayRequest) return; // 正在加载中，交给 onLoadError
+        audioPlayer.addEventListener('error', (e)=>{
+            console.error('💥 全局 audio error 事件:', audioPlayer.error);
+            if (pendingPlayRequest) return;
             const t = playlist[currentTrackIndex];
             showToast(`⚠️ 播放出错：${t?.title||'未知'}`, true);
             if (isPoweredOn && currentTrackIndex>=0) setTimeout(()=>{ if(isPoweredOn) switchToNextTrack(); }, 2000);
         });
 
         audioPlayer.addEventListener('canplay', ()=>{
-            if (isPoweredOn && audioPlayer.paused && audioPlayer.src && !pendingPlayRequest) audioPlayer.play().catch(()=>{});
+            console.log('🎧 canplay 事件, paused:', audioPlayer.paused, 'src:', audioPlayer.src);
+            if (isPoweredOn && audioPlayer.paused && audioPlayer.src && !pendingPlayRequest) {
+                console.log('  尝试自动恢复播放...');
+                audioPlayer.play().catch(err => console.warn('  自动播放失败:', err.message));
+            }
         });
 
         scheduleToggle.addEventListener('click', ()=>{
@@ -606,10 +642,12 @@
 
         window.addEventListener('beforeunload', ()=>{ stopPlayback(); if(preloadAudio){ preloadAudio.src=''; preloadAudio=null; } });
         document.addEventListener('visibilitychange', ()=>{
+            console.log('👁️ 页面可见性变化:', document.visibilityState);
             if (document.visibilityState==='visible' && isPoweredOn) setTimeout(()=>{ if(isPoweredOn) syncPlaybackPosition(); }, 300);
         });
 
         function init() {
+            console.log('🏁 初始化');
             audioPlayer.volume = parseFloat(volumeSlider.value)/100;
             volumeValue.textContent = volumeSlider.value+'%';
             updateClock(); setInterval(updateClock, 1000);
@@ -621,6 +659,7 @@
             }
         }
         init();
+        console.log('✅ 电台初始化完成，等待用户操作');
     })();
     
 </script>
