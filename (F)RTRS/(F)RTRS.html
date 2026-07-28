@@ -1,0 +1,1344 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  
+  
+  <meta name="keywords" content="村纱水蜜, QBU-88, 缠枝, Popin&#39;Party">
+  
+  
+  <title>
+    
+    亲眼所见之海
+  </title>
+  <!-- Icon -->
+  
+    <link rel="shortcut icon" href="/images/favicon.ico">
+    
+  
+<link rel="stylesheet" href="/css/style.css">
+
+  
+  
+<link rel="stylesheet" href="/fancybox/jquery.fancybox.min.css">
+
+  
+  
+<script src="/js/pace.min.js"></script>
+
+<meta name="generator" content="Hexo 8.1.2"></head>
+
+<body>
+  <main class="content">
+    <section class="outer">
+  <article id="page-" class="article article-type-page" itemscope
+  itemprop="blogPost" data-scroll-reveal>
+
+  <div class="article-inner">
+    
+
+    
+
+    
+
+    <div class="article-entry" itemprop="articleBody">
+      
+      
+      
+        <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📻 伪实时电台 - 音乐播放器</title>
+    <style>
+        :root {
+            --bg: #0f1a1a;
+            --panel-bg: #132626;
+            --accent: #2aa198;
+            --accent-glow: #4db8a8;
+            --accent-dim: #1f5c5c;
+            --text: #d0e0df;
+            --text-secondary: #8ba8a6;
+            --border: #1f3a3a;
+            --progress-bg: #1c2e2e;
+            --danger: #c0392b;
+            --success: #27ae60;
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', 'Menlo', monospace;
+            --font-sans: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            background-image:
+                radial-gradient(ellipse at 50% 30%, rgba(34,85,85,0.15) 0%, transparent 70%),
+                radial-gradient(ellipse at 20% 70%, rgba(42,161,152,0.05) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 60%, rgba(34,85,85,0.08) 0%, transparent 60%);
+            font-family: var(--font-sans);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        /* 主容器 - 收音机外观 */
+        .radio-device {
+            background: var(--panel-bg);
+            border-radius: 28px;
+            padding: 30px 28px 24px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow:
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 4px 16px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.03),
+                0 0 0 1px rgba(34,85,85,0.15);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 装饰性顶部条纹 */
+        .radio-device::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(42,161,152,0.3), transparent);
+            border-radius: 2px;
+        }
+
+        /* 顶部栏：时间 + 状态 */
+        .top-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 18px;
+            padding: 0 4px;
+        }
+        .live-clock {
+            font-family: var(--font-mono);
+            font-size: 1.05rem;
+            color: var(--text-secondary);
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: livePulse 2s ease-in-out infinite;
+            box-shadow: 0 0 8px rgba(39,174,96,0.6);
+        }
+        @keyframes livePulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.7); }
+        }
+        .status-badge {
+            font-size: 0.78rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            background: rgba(39,174,96,0.12);
+            color: #5dde8e;
+            letter-spacing: 0.4px;
+            font-weight: 500;
+            border: 1px solid rgba(39,174,96,0.2);
+            white-space: nowrap;
+        }
+        .status-badge.offline {
+            background: rgba(192,57,43,0.12);
+            color: #e74c3c;
+            border-color: rgba(192,57,43,0.2);
+        }
+        .status-badge.waiting {
+            background: rgba(42,161,152,0.12);
+            color: #2aa198;
+            border-color: rgba(42,161,152,0.25);
+        }
+
+        /* 频率显示区 */
+        .frequency-display {
+            text-align: center;
+            margin-bottom: 10px;
+            position: relative;
+        }
+        .freq-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            margin-bottom: 2px;
+        }
+        .freq-number {
+            font-family: var(--font-mono);
+            font-size: 3.2rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(180deg, #8fd0c0 0%, #2aa198 40%, #185555 80%);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            color: transparent;
+            filter: drop-shadow(0 0 12px rgba(42,161,152,0.4));
+            line-height: 1.1;
+        }
+        .freq-unit {
+            font-size: 0.9rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            -webkit-text-fill-color: var(--text-secondary);
+        }
+
+        /* 歌曲信息区 */
+        .now-playing-section {
+            background: rgba(0, 0, 0, 0.25);
+            border-radius: 16px;
+            padding: 18px 20px;
+            margin-bottom: 14px;
+            border: 1px solid var(--border);
+            text-align: center;
+            min-height: 90px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            transition: all 0.4s ease;
+        }
+        .song-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e0f0ef;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            word-break: break-word;
+        }
+        .song-artist {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-top: 4px;
+            letter-spacing: 0.3px;
+        }
+        .song-index {
+            font-size: 0.7rem;
+            color: var(--accent);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            opacity: 0.8;
+        }
+        .no-song {
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 0.95rem;
+            opacity: 0.7;
+        }
+
+        /* 进度条 */
+        .progress-container {
+            margin-bottom: 10px;
+            padding: 0 4px;
+        }
+        .progress-time-row {
+            display: flex;
+            justify-content: space-between;
+            font-family: var(--font-mono);
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 5px;
+            letter-spacing: 0.4px;
+        }
+        .progress-bar-outer {
+            height: 6px;
+            background: var(--progress-bg);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, #1f5c5c, #2aa198, #4db8a8);
+            border-radius: 3px;
+            transition: width 0.9s linear;
+            position: relative;
+        }
+        .progress-bar-inner::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #5ec4b4;
+            box-shadow: 0 0 10px rgba(42,161,152,0.7);
+            opacity: 0.9;
+        }
+
+        /* 下一首预告 */
+        .up-next {
+            background: rgba(0, 0, 0, 0.15);
+            border-radius: 10px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: 1px solid transparent;
+            letter-spacing: 0.3px;
+        }
+        .up-next-icon {
+            font-size: 1rem;
+        }
+        .up-next-info {
+            flex: 1;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .up-next-time {
+            font-family: var(--font-mono);
+            font-size: 0.73rem;
+            color: var(--accent);
+            white-space: nowrap;
+        }
+
+        /* 控制按钮 */
+        .controls-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+        .btn-power {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.4);
+            color: #fff;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+        }
+        .btn-power:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(42,161,152,0.35);
+            transform: scale(1.04);
+        }
+        .btn-power:active {
+            transform: scale(0.95);
+            transition: transform 0.1s ease;
+        }
+        .btn-power.on {
+            border-color: var(--accent);
+            box-shadow: 0 0 18px rgba(42,161,152,0.5);
+            background: rgba(42,161,152,0.12);
+        }
+        .volume-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-shrink: 0;
+        }
+        .volume-icon {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            flex-shrink: 0;
+        }
+        .volume-slider {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 80px;
+            height: 5px;
+            border-radius: 3px;
+            background: var(--progress-bg);
+            outline: none;
+            cursor: pointer;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: #2aa198;
+            cursor: pointer;
+            border: 2px solid #fff;
+            box-shadow: 0 0 8px rgba(42,161,152,0.6);
+        }
+        .volume-value {
+            font-family: var(--font-mono);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            width: 28px;
+            text-align: center;
+        }
+
+        /* 播放列表时间表 */
+        .schedule-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            font-size: 0.78rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 8px;
+            letter-spacing: 0.4px;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        .schedule-toggle:hover {
+            opacity: 1;
+            color: var(--accent);
+        }
+        .schedule-arrow {
+            transition: transform 0.3s ease;
+            display: inline-block;
+            font-size: 0.65rem;
+        }
+        .schedule-arrow.open {
+            transform: rotate(180deg);
+        }
+        .schedule-table-wrapper {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.5s ease, margin 0.3s ease;
+            margin-top: 0;
+        }
+        .schedule-table-wrapper.open {
+            max-height: 400px;
+            margin-top: 10px;
+        }
+        .schedule-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.73rem;
+            letter-spacing: 0.3px;
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            display: block;
+            max-height: 280px;
+            overflow-y: auto;
+        }
+        .schedule-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .schedule-table th {
+            background: rgba(0,0,0,0.6);
+            color: var(--accent);
+            font-weight: 500;
+            padding: 8px 10px;
+            text-align: left;
+            font-size: 0.68rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            white-space: nowrap;
+        }
+        .schedule-table td {
+            padding: 7px 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.04);
+            white-space: nowrap;
+        }
+        .schedule-table tr.now-playing-row {
+            background: rgba(42,161,152,0.12);
+            font-weight: 600;
+            color: #c0f0e8;
+        }
+        .schedule-table tr.now-playing-row td {
+            border-bottom-color: rgba(42,161,152,0.3);
+        }
+        .schedule-table .time-col {
+            font-family: var(--font-mono);
+            color: var(--accent);
+            width: 70px;
+        }
+        .schedule-table .dur-col {
+            font-family: var(--font-mono);
+            color: var(--text-secondary);
+            width: 55px;
+            text-align: center;
+        }
+        .schedule-table .title-col {
+            max-width: 180px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .schedule-table .artist-col {
+            color: var(--text-secondary);
+            max-width: 120px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Toast消息 */
+        .message-toast {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1c2e2e;
+            color: #2aa198;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            z-index: 100;
+            border: 1px solid rgba(42,161,152,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            animation: slideDown 0.4s ease;
+            letter-spacing: 0.3px;
+            max-width: 90vw;
+            text-align: center;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .message-toast.error {
+            background: #2b1e1e;
+            color: #e74c3c;
+            border-color: rgba(231,76,60,0.4);
+        }
+
+        /* 响应式 */
+        @media (max-width: 480px) {
+            .radio-device {
+                padding: 20px 14px 16px;
+                border-radius: 20px;
+            }
+            .freq-number {
+                font-size: 2.4rem;
+            }
+            .song-title {
+                font-size: 1.1rem;
+            }
+            .now-playing-section {
+                padding: 14px 12px;
+                min-height: 70px;
+            }
+            .btn-power {
+                width: 46px;
+                height: 46px;
+                font-size: 1.2rem;
+            }
+            .volume-slider {
+                width: 55px;
+            }
+            .schedule-table {
+                font-size: 0.68rem;
+            }
+            .schedule-table th,
+            .schedule-table td {
+                padding: 5px 6px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="radio-device" id="radioDevice">
+        <div class="top-bar">
+            <div class="live-clock" id="liveClock">
+                <span class="live-dot" id="liveDot"></span>
+                <span id="clockTime">--:--:--</span>
+            </div>
+            <div class="status-badge offline" id="statusBadge">🔴 已关机</div>
+        </div>
+
+        <div class="frequency-display">
+            <div class="freq-label">F R E Q U E N C Y</div>
+            <div class="freq-number">
+                98<span style="font-size:0.7em;">.</span>7 <span class="freq-unit">MHz</span>
+            </div>
+        </div>
+
+        <div class="now-playing-section" id="nowPlayingSection">
+            <div class="song-index" id="songIndex">—</div>
+            <div class="song-title no-song" id="songTitle">按下电源键开启收音机</div>
+            <div class="song-artist" id="songArtist"></div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-time-row">
+                <span id="progressCurrent">00:00</span>
+                <span id="progressTotal">00:00</span>
+            </div>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div class="up-next" id="upNext">
+            <span class="up-next-icon">⏭</span>
+            <span class="up-next-info" id="upNextInfo">—</span>
+            <span class="up-next-time" id="upNextTime"></span>
+        </div>
+
+        <div class="controls-row">
+            <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
+            <div class="volume-slider-container">
+                <span class="volume-icon">🔈</span>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75" title="音量">
+                <span class="volume-value" id="volumeValue">75%</span>
+            </div>
+        </div>
+
+        <div class="schedule-toggle" id="scheduleToggle">
+            📋 播放时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
+        </div>
+        <div class="schedule-table-wrapper" id="scheduleWrapper">
+            <table class="schedule-table" id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th class="time-col">开始时间</th>
+                        <th class="dur-col">时长</th>
+                        <th class="title-col">歌曲</th>
+                        <th class="artist-col">艺术家</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleTbody">
+                    <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <audio id="audioPlayer" preload="auto" style="display:none;"></audio>
+    <div id="toastContainer"></div>
+
+    <script>
+        
+        (function() {
+            // ==================== 配置区 ====================
+            const CSV_PATH = 'playlist.csv';
+            const MUSIC_PATH_PREFIX = 'music/';
+
+            // 电台第一首歌的开始时间（本地时间）
+            const RADIO_START = new Date(2026, 6, 29, 0, 0, 0); // 2026年7月29日 00:00:00
+
+            const LOOP_PLAYLIST = true;
+            const SYNC_INTERVAL = 15000;
+            const MAX_DRIFT_SECONDS = 2.0;
+            const PRELOAD_BEFORE_END = 12;
+
+            // ==================== DOM引用 ====================
+            const audioPlayer = document.getElementById('audioPlayer');
+            const btnPower = document.getElementById('btnPower');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            const liveDot = document.getElementById('liveDot');
+            const clockTime = document.getElementById('clockTime');
+            const statusBadge = document.getElementById('statusBadge');
+            const songIndex = document.getElementById('songIndex');
+            const songTitle = document.getElementById('songTitle');
+            const songArtist = document.getElementById('songArtist');
+            const progressBar = document.getElementById('progressBar');
+            const progressCurrent = document.getElementById('progressCurrent');
+            const progressTotal = document.getElementById('progressTotal');
+            const upNextInfo = document.getElementById('upNextInfo');
+            const upNextTime = document.getElementById('upNextTime');
+            const scheduleToggle = document.getElementById('scheduleToggle');
+            const scheduleArrow = document.getElementById('scheduleArrow');
+            const scheduleWrapper = document.getElementById('scheduleWrapper');
+            const scheduleTbody = document.getElementById('scheduleTbody');
+            const nowPlayingSection = document.getElementById('nowPlayingSection');
+            const toastContainer = document.getElementById('toastContainer');
+
+            // ==================== 状态变量 ====================
+            let playlist = [];
+            let totalPlaylistDuration = 0;
+            let isPoweredOn = false;
+            let currentTrackIndex = -1;
+            let currentTrackStartTime = null;
+            let currentTrackEndTime = null;
+            let switchTimeoutId = null;
+            let syncIntervalId = null;
+            let progressAnimFrameId = null;
+            let preloadAudio = null;
+            let toastTimeoutId = null;
+
+            // ==================== 工具函数 ====================
+            function parseDuration(durStr) {
+                if (!durStr || typeof durStr !== 'string') return 0;
+                durStr = durStr.trim();
+                if (/^\d+(\.\d+)?$/.test(durStr)) {
+                    return parseFloat(durStr);
+                }
+                const parts = durStr.split(':').map(s => parseFloat(s.trim()));
+                if (parts.length === 2) return parts[0] * 60 + parts[1];
+                if (parts.length === 3) return parts[0] * 3600 + parts[1] * 60 + parts[2];
+                return 0;
+            }
+
+            function formatSeconds(totalSec) {
+                if (isNaN(totalSec) || totalSec < 0) return '00:00';
+                const sec = Math.floor(totalSec);
+                const h = Math.floor(sec / 3600);
+                const m = Math.floor((sec % 3600) / 60);
+                const s = sec % 60;
+                const pad = (n) => String(n).padStart(2, '0');
+                if (h > 0) return `${pad(h)}:${pad(m)}:${pad(s)}`;
+                return `${pad(m)}:${pad(s)}`;
+            }
+
+            function formatTime(date) {
+                if (!date || isNaN(date.getTime())) return '--:--:--';
+                const h = String(date.getHours()).padStart(2, '0');
+                const m = String(date.getMinutes()).padStart(2, '0');
+                const s = String(date.getSeconds()).padStart(2, '0');
+                return `${h}:${m}:${s}`;
+            }
+
+            function formatDateTime(date) {
+                if (!date || isNaN(date.getTime())) return '--';
+                const y = date.getFullYear();
+                const mo = String(date.getMonth() + 1).padStart(2, '0');
+                const d = String(date.getDate()).padStart(2, '0');
+                return `${y}-${mo}-${d} ${formatTime(date)}`;
+            }
+
+            function showToast(message, isError = false) {
+                if (toastTimeoutId) clearTimeout(toastTimeoutId);
+                const existing = toastContainer.querySelector('.message-toast');
+                if (existing) existing.remove();
+
+                const toast = document.createElement('div');
+                toast.className = 'message-toast' + (isError ? ' error' : '');
+                toast.textContent = message;
+                toastContainer.appendChild(toast);
+
+                toastTimeoutId = setTimeout(() => {
+                    toast.style.opacity = '0';
+                    toast.style.transition = 'opacity 0.4s ease';
+                    setTimeout(() => toast.remove(), 400);
+                }, 3500);
+            }
+
+            // ==================== CSV加载与解析 ====================
+            async function loadPlaylist() {
+                try {
+                    const response = await fetch(CSV_PATH);
+                    if (!response.ok) throw new Error(`无法加载CSV文件 (HTTP ${response.status})`);
+                    const text = await response.text();
+                    parseCSV(text);
+                    if (playlist.length === 0) throw new Error('播放列表为空，请检查CSV文件内容');
+                    buildSchedule();
+                    renderScheduleTable();
+                    updateUpNextDisplay();
+                    showToast(`✅ 已加载 ${playlist.length} 首歌曲，电台时间表已就绪`);
+                } catch (err) {
+                    console.error(err);
+                    showToast(`❌ 加载失败：${err.message}`, true);
+                    scheduleTbody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:#e74c3c;">加载失败：${err.message}</td></tr>`;
+                    statusBadge.textContent = '⚠️ 数据异常';
+                    statusBadge.className = 'status-badge offline';
+                }
+            }
+
+            function parseCSV(csvText) {
+                playlist = [];
+                const lines = csvText.split(/\r?\n/).filter(line => line.trim().length > 0);
+                if (lines.length < 2) return;
+                for (let i = 1; i < lines.length; i++) {
+                    const cols = parseCSVLine(lines[i]);
+                    if (cols.length < 2) continue;
+                    const filename = (cols[0] || '').trim();
+                    const durationStr = (cols[1] || '').trim();
+                    const title = (cols[2] || '').trim() || filename.replace(/\.[^.]+$/, '');
+                    const artist = (cols[3] || '').trim() || '未知艺术家';
+                    const durationSec = parseDuration(durationStr);
+                    if (!filename || durationSec <= 0) continue;
+                    playlist.push({ filename, durationSec, title, artist, startTime: null, endTime: null });
+                }
+            }
+
+            function parseCSVLine(line) {
+                const result = [];
+                let current = '';
+                let inQuotes = false;
+                for (let i = 0; i < line.length; i++) {
+                    const ch = line[i];
+                    if (inQuotes) {
+                        if (ch === '"') {
+                            if (i + 1 < line.length && line[i + 1] === '"') {
+                                current += '"'; i++;
+                            } else {
+                                inQuotes = false;
+                            }
+                        } else {
+                            current += ch;
+                        }
+                    } else {
+                        if (ch === '"') inQuotes = true;
+                        else if (ch === ',') { result.push(current); current = ''; }
+                        else current += ch;
+                    }
+                }
+                result.push(current);
+                return result;
+            }
+
+            function buildSchedule() {
+                totalPlaylistDuration = 0;
+                let currentStart = RADIO_START.getTime();
+                for (let i = 0; i < playlist.length; i++) {
+                    playlist[i].startTime = currentStart;
+                    playlist[i].endTime = currentStart + playlist[i].durationSec * 1000;
+                    currentStart = playlist[i].endTime;
+                    totalPlaylistDuration += playlist[i].durationSec;
+                }
+            }
+
+            // ==================== 核心定位逻辑 ====================
+            /**
+             * 根据给定时间戳，找到对应的歌曲索引和在该歌曲中的偏移秒数
+             * @param {number} timestampMs - 要查询的绝对时间戳(ms)
+             * @returns {Object} 包含 trackIndex, offsetSec, trackStartMs, trackEndMs, cycleNumber 等属性
+             */
+            function findTrackAtTime(timestampMs) {
+                const radioStartMs = RADIO_START.getTime();
+                if (timestampMs < radioStartMs) {
+                    return {
+                        trackIndex: 0, offsetSec: 0,
+                        trackStartMs: playlist[0]?.startTime || radioStartMs,
+                        trackEndMs: playlist[0]?.endTime || radioStartMs,
+                        cycleNumber: 0, beforeStart: true
+                    };
+                }
+
+                let elapsedMs = timestampMs - radioStartMs;
+                if (!LOOP_PLAYLIST && elapsedMs >= totalPlaylistDuration * 1000) {
+                    return { trackIndex: -1, offsetSec: 0, trackStartMs: 0, trackEndMs: 0, cycleNumber: 0, pastEnd: true };
+                }
+
+                const totalMs = totalPlaylistDuration * 1000;
+                let cycleNumber = 0;
+                if (LOOP_PLAYLIST && totalMs > 0) {
+                    cycleNumber = Math.floor(elapsedMs / totalMs);
+                    elapsedMs = elapsedMs % totalMs;
+                }
+
+                for (let i = 0; i < playlist.length; i++) {
+                    const relStart = playlist[i].startTime - radioStartMs;
+                    const relEnd = playlist[i].endTime - radioStartMs;
+                    if (elapsedMs >= relStart && elapsedMs < relEnd) {
+                        const offsetSec = (elapsedMs - relStart) / 1000;
+                        return {
+                            trackIndex: i,
+                            offsetSec: Math.max(0, Math.min(offsetSec, playlist[i].durationSec)),
+                            trackStartMs: playlist[i].startTime,
+                            trackEndMs: playlist[i].endTime,
+                            cycleNumber
+                        };
+                    }
+                }
+                return { trackIndex: 0, offsetSec: 0, trackStartMs: playlist[0]?.startTime || radioStartMs, trackEndMs: playlist[0]?.endTime || radioStartMs, cycleNumber: 0 };
+            }
+
+            function getCurrentPlaybackPosition() {
+                return findTrackAtTime(Date.now());
+            }
+
+            // ==================== 播放控制 ====================
+            function playTrackAt(trackIndex, offsetSec) {
+                if (trackIndex < 0 || trackIndex >= playlist.length) return false;
+                const track = playlist[trackIndex];
+                const audioSrc = MUSIC_PATH_PREFIX + track.filename;
+
+                if (audioPlayer.src !== audioSrc || audioPlayer.readyState === 0) {
+                    audioPlayer.src = audioSrc;
+                }
+                audioPlayer.currentTime = Math.max(0, Math.min(offsetSec, track.durationSec));
+                audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
+
+                currentTrackIndex = trackIndex;
+                currentTrackStartTime = track.startTime;
+                currentTrackEndTime = track.endTime;
+
+                updateNowPlayingDisplay();
+                updateUpNextDisplay();
+                updateScheduleTableHighlight();
+
+                const playPromise = audioPlayer.play();
+                if (playPromise) playPromise.catch(() => {});
+
+                scheduleNextTrackSwitch();
+                return true;
+            }
+
+            function scheduleNextTrackSwitch() {
+                if (switchTimeoutId) clearTimeout(switchTimeoutId);
+                if (currentTrackIndex < 0 || !currentTrackEndTime) return;
+                const remainingMs = currentTrackEndTime - Date.now();
+                if (remainingMs <= 0) {
+                    switchToNextTrack();
+                    return;
+                }
+                switchTimeoutId = setTimeout(() => switchToNextTrack(), remainingMs + 50);
+                schedulePreload(remainingMs);
+            }
+
+            function schedulePreload(remainingMs) {
+                const preloadDelay = remainingMs - PRELOAD_BEFORE_END * 1000;
+                if (preloadDelay > 0) {
+                    setTimeout(() => {
+                        const nextIndex = getNextTrackIndex();
+                        if (nextIndex >= 0 && nextIndex < playlist.length) {
+                            const nextSrc = MUSIC_PATH_PREFIX + playlist[nextIndex].filename;
+                            if (!preloadAudio) {
+                                preloadAudio = new Audio();
+                                preloadAudio.preload = 'auto';
+                                preloadAudio.volume = 0;
+                            }
+                            if (preloadAudio.src !== nextSrc) preloadAudio.src = nextSrc;
+                        }
+                    }, preloadDelay);
+                }
+            }
+
+            function getNextTrackIndex() {
+                if (playlist.length === 0) return -1;
+                let next = currentTrackIndex + 1;
+                if (next >= playlist.length) return LOOP_PLAYLIST ? 0 : -1;
+                return next;
+            }
+
+            function switchToNextTrack() {
+                if (!isPoweredOn) return;
+                const nextIndex = getNextTrackIndex();
+                if (nextIndex < 0) {
+                    stopPlayback();
+                    statusBadge.textContent = '⏹ 播放结束';
+                    statusBadge.className = 'status-badge offline';
+                    songTitle.textContent = '今日节目已结束';
+                    songTitle.className = 'no-song';
+                    songArtist.textContent = '';
+                    songIndex.textContent = '—';
+                    progressBar.style.width = '0%';
+                    progressCurrent.textContent = '00:00';
+                    progressTotal.textContent = '00:00';
+                    upNextInfo.textContent = '—';
+                    upNextTime.textContent = '';
+                    return;
+                }
+                const now = Date.now();
+                const nextTrack = playlist[nextIndex];
+                let offsetSec = 0;
+                if (now > nextTrack.startTime) {
+                    offsetSec = (now - nextTrack.startTime) / 1000;
+                    if (offsetSec > nextTrack.durationSec) offsetSec = 0;
+                }
+                playTrackAt(nextIndex, Math.max(0, offsetSec));
+            }
+
+            function stopPlayback() {
+                audioPlayer.pause();
+                audioPlayer.src = '';
+                if (switchTimeoutId) clearTimeout(switchTimeoutId);
+                if (syncIntervalId) clearInterval(syncIntervalId);
+                if (progressAnimFrameId) cancelAnimationFrame(progressAnimFrameId);
+                switchTimeoutId = syncIntervalId = progressAnimFrameId = null;
+                currentTrackIndex = -1;
+                currentTrackStartTime = currentTrackEndTime = null;
+                progressBar.style.width = '0%';
+                progressCurrent.textContent = '00:00';
+                progressTotal.textContent = '00:00';
+                updateScheduleTableHighlight();
+            }
+
+            function powerOn() {
+                if (playlist.length === 0) {
+                    showToast('⚠️ 播放列表未加载，请检查CSV文件', true);
+                    return;
+                }
+                isPoweredOn = true;
+                btnPower.classList.add('on');
+                btnPower.textContent = '📻';
+                statusBadge.textContent = '🟢 直播中';
+                statusBadge.className = 'status-badge';
+                liveDot.style.animation = 'livePulse 2s ease-in-out infinite';
+                liveDot.style.background = 'var(--success)';
+
+                const pos = getCurrentPlaybackPosition();
+                if (pos.pastEnd) {
+                    statusBadge.textContent = '⏹ 播放结束';
+                    statusBadge.className = 'status-badge offline';
+                    songTitle.textContent = '今日节目已结束';
+                    songTitle.className = 'no-song';
+                    return;
+                }
+                if (pos.beforeStart && !LOOP_PLAYLIST) {
+                    statusBadge.textContent = '⏳ 等待开播';
+                    statusBadge.className = 'status-badge waiting';
+                    songTitle.textContent = '电台尚未开播';
+                    songTitle.className = 'no-song';
+                    songArtist.textContent = `预计开播时间：${formatDateTime(RADIO_START)}`;
+                    const waitMs = RADIO_START.getTime() - Date.now();
+                    if (waitMs > 0 && waitMs < 86400000) {
+                        switchTimeoutId = setTimeout(() => {
+                            if (isPoweredOn) {
+                                playTrackAt(0, 0);
+                                statusBadge.textContent = '🟢 直播中';
+                                statusBadge.className = 'status-badge';
+                            }
+                        }, waitMs + 100);
+                    }
+                    return;
+                }
+
+                playTrackAt(pos.trackIndex, pos.offsetSec);
+                startSyncTimer();
+                startProgressUpdater();
+            }
+
+            function powerOff() {
+                isPoweredOn = false;
+                btnPower.classList.remove('on');
+                btnPower.textContent = '📻';
+                statusBadge.textContent = '🔴 已关机';
+                statusBadge.className = 'status-badge offline';
+                liveDot.style.animation = 'none';
+                liveDot.style.background = '#888';
+                stopPlayback();
+                songTitle.textContent = '按下电源键开启收音机';
+                songTitle.className = 'no-song';
+                songArtist.textContent = '';
+                songIndex.textContent = '—';
+                upNextInfo.textContent = '—';
+                upNextTime.textContent = '';
+                updateScheduleTableHighlight();
+            }
+
+            function startSyncTimer() {
+                if (syncIntervalId) clearInterval(syncIntervalId);
+                syncIntervalId = setInterval(() => {
+                    if (!isPoweredOn || currentTrackIndex < 0) return;
+                    syncPlaybackPosition();
+                }, SYNC_INTERVAL);
+            }
+
+            function syncPlaybackPosition() {
+                if (!isPoweredOn || currentTrackIndex < 0 || playlist.length === 0) return;
+                const now = Date.now();
+                const pos = findTrackAtTime(now);
+                if (pos.pastEnd && !LOOP_PLAYLIST) {
+                    stopPlayback();
+                    statusBadge.textContent = '⏹ 播放结束';
+                    statusBadge.className = 'status-badge offline';
+                    return;
+                }
+                if (pos.trackIndex !== currentTrackIndex) {
+                    playTrackAt(pos.trackIndex, pos.offsetSec);
+                    return;
+                }
+                const drift = Math.abs(pos.offsetSec - audioPlayer.currentTime);
+                if (drift > MAX_DRIFT_SECONDS) {
+                    audioPlayer.currentTime = pos.offsetSec;
+                }
+            }
+
+            function startProgressUpdater() {
+                if (progressAnimFrameId) cancelAnimationFrame(progressAnimFrameId);
+                function update() {
+                    if (!isPoweredOn || currentTrackIndex < 0) {
+                        progressAnimFrameId = requestAnimationFrame(update);
+                        return;
+                    }
+                    const track = playlist[currentTrackIndex];
+                    if (!track) {
+                        progressAnimFrameId = requestAnimationFrame(update);
+                        return;
+                    }
+                    const elapsedInTrack = (Date.now() - currentTrackStartTime) / 1000;
+                    const clamped = Math.max(0, Math.min(elapsedInTrack, track.durationSec));
+                    progressBar.style.width = (track.durationSec > 0 ? (clamped / track.durationSec) * 100 : 0) + '%';
+                    progressCurrent.textContent = formatSeconds(clamped);
+                    progressTotal.textContent = formatSeconds(track.durationSec);
+                    progressAnimFrameId = requestAnimationFrame(update);
+                }
+                progressAnimFrameId = requestAnimationFrame(update);
+            }
+
+            // ==================== UI更新 ====================
+            function updateNowPlayingDisplay() {
+                if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) return;
+                const track = playlist[currentTrackIndex];
+                songTitle.textContent = track.title;
+                songTitle.className = 'song-title';
+                songArtist.textContent = track.artist;
+                songIndex.textContent = `TRACK ${currentTrackIndex + 1} / ${playlist.length}`;
+            }
+
+            function updateUpNextDisplay() {
+                const nextIndex = getNextTrackIndex();
+                if (nextIndex < 0 || nextIndex >= playlist.length) {
+                    upNextInfo.textContent = '—';
+                    upNextTime.textContent = '';
+                    return;
+                }
+                const nextTrack = playlist[nextIndex];
+                upNextInfo.textContent = `${nextTrack.title} — ${nextTrack.artist}`;
+                let nextStartMs = nextTrack.startTime;
+                if (LOOP_PLAYLIST && nextStartMs < Date.now()) {
+                    const totalMs = totalPlaylistDuration * 1000;
+                    const cyclesPassed = Math.floor((Date.now() - nextStartMs) / totalMs) + 1;
+                    nextStartMs += cyclesPassed * totalMs;
+                }
+                upNextTime.textContent = formatTime(new Date(nextStartMs));
+            }
+
+            function updateScheduleTableHighlight() {
+                const rows = scheduleTbody.querySelectorAll('tr');
+                rows.forEach((row, i) => {
+                    row.classList.toggle('now-playing-row', i === currentTrackIndex && isPoweredOn);
+                });
+            }
+
+            function renderScheduleTable() {
+                if (playlist.length === 0) {
+                    scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">暂无数据</td></tr>';
+                    return;
+                }
+                let html = '';
+                playlist.forEach((track, i) => {
+                    const startTimeStr = formatTime(new Date(track.startTime));
+                    const durStr = formatSeconds(track.durationSec);
+                    html += `<tr data-index="${i}">
+                        <td class="time-col">${startTimeStr}</td>
+                        <td class="dur-col">${durStr}</td>
+                        <td class="title-col" title="${escapeHtml(track.title)}">${escapeHtml(track.title)}</td>
+                        <td class="artist-col" title="${escapeHtml(track.artist)}">${escapeHtml(track.artist)}</td>
+                    </tr>`;
+                });
+                scheduleTbody.innerHTML = html;
+                updateScheduleTableHighlight();
+            }
+
+            function escapeHtml(str) {
+                const div = document.createElement('div');
+                div.textContent = str;
+                return div.innerHTML;
+            }
+
+            function updateClock() {
+                const now = new Date();
+                clockTime.textContent = formatTime(now) + ' · ' + now.toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
+            }
+
+            // ==================== 事件绑定 ====================
+            btnPower.addEventListener('click', () => isPoweredOn ? powerOff() : powerOn());
+            volumeSlider.addEventListener('input', () => {
+                const vol = parseInt(volumeSlider.value);
+                volumeValue.textContent = vol + '%';
+                audioPlayer.volume = vol / 100;
+            });
+
+            audioPlayer.addEventListener('error', () => {
+                const track = playlist[currentTrackIndex];
+                showToast(`⚠️ 无法播放：${track?.title || '未知歌曲'}`, true);
+                if (isPoweredOn && currentTrackIndex >= 0) {
+                    setTimeout(() => { if (isPoweredOn) switchToNextTrack(); }, 2000);
+                }
+            });
+
+            audioPlayer.addEventListener('canplay', () => {
+                if (isPoweredOn && audioPlayer.paused && audioPlayer.src) {
+                    audioPlayer.play().catch(() => {});
+                }
+            });
+
+            scheduleToggle.addEventListener('click', () => {
+                const isOpen = scheduleWrapper.classList.toggle('open');
+                scheduleArrow.classList.toggle('open', isOpen);
+            });
+
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ') { e.preventDefault(); btnPower.click(); }
+                if (e.key === 'ArrowUp') { e.preventDefault(); volumeSlider.value = Math.min(100, +volumeSlider.value + 5); volumeSlider.dispatchEvent(new Event('input')); }
+                if (e.key === 'ArrowDown') { e.preventDefault(); volumeSlider.value = Math.max(0, +volumeSlider.value - 5); volumeSlider.dispatchEvent(new Event('input')); }
+                if (e.key.toLowerCase() === 'm') {
+                    if (audioPlayer.volume > 0.01) { audioPlayer.volume = 0; volumeSlider.value = 0; volumeValue.textContent = '0%'; }
+                    else { const vol = 75; audioPlayer.volume = vol/100; volumeSlider.value = vol; volumeValue.textContent = vol+'%'; }
+                }
+            });
+
+            window.addEventListener('beforeunload', () => {
+                stopPlayback();
+                if (preloadAudio) { preloadAudio.src = ''; preloadAudio = null; }
+            });
+
+            document.addEventListener('visibilitychange', () => {
+                if (document.visibilityState === 'visible' && isPoweredOn) {
+                    setTimeout(() => { if (isPoweredOn) syncPlaybackPosition(); }, 300);
+                }
+            });
+
+            // ==================== 初始化 ====================
+            function init() {
+                audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
+                volumeValue.textContent = volumeSlider.value + '%';
+                updateClock();
+                setInterval(updateClock, 1000);
+                loadPlaylist();
+            }
+            init();
+        })();
+        
+    </script>
+</body>
+</html>
+      
+    </div>
+    <footer class="article-footer">
+      <a data-url="https://sinmi-senchou.github.io/(F)RTRS/(F)RTRS.html" data-id="cuidi6xUJLGBJlIWtUuLWvZ0i" class="article-share-link">
+        分享
+      </a>
+      
+    </footer>
+
+  </div>
+
+  
+  
+  
+
+  
+
+</article>
+</section>
+    <footer class="footer">
+  <div class="outer">
+    <ul class="list-inline">
+      <li>亲眼所见之海 &copy; 2026</li>
+      
+        <li>
+          
+            <a href="https://beian.miit.gov.cn/" target="_blank"></a>
+            
+        </li>
+      
+      <li>Powered by <a href="http://hexo.io/" target="_blank">Hexo</a></li>
+      <li>theme  <a target="_blank" rel="noopener" href="https://github.com/zhwangart/hexo-theme-ocean">Ocean</a></li>
+    </ul>
+    <p><ul class="list-inline">
+  
+  <li><i class="fe fe-smile-alt tooltip" data-tooltip="UV"></i> <span id="busuanzi_value_site_uv"></span></li>
+  
+</ul></p>
+  </div>
+</footer>
+  </main>
+  <aside class="sidebar">
+    <button class="navbar-toggle"></button>
+<nav class="navbar">
+  
+  <div class="logo">
+    <a href="/"><img src="/images/sinminship.svg" alt="亲眼所见之海"></a>
+  </div>
+  
+  <ul class="nav nav-main">
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/">Home</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/archives">Archives</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/gallery">Gallery</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link" href="/about">About</a>
+    </li>
+    
+    <li class="nav-item">
+      <a class="nav-item-link nav-item-search" title="搜索">
+        <i class="fe fe-search"></i>
+        搜索
+      </a>
+    </li>
+  </ul>
+</nav>
+<nav class="navbar navbar-bottom">
+  <ul class="nav">
+    <li class="nav-item">
+      <div class="totop" id="totop">
+  <i class="fe fe-rocket"></i>
+</div>
+    </li>
+    <li class="nav-item">
+      
+      <a class="nav-item-link" target="_blank" href="/atom.xml" title="RSS Feed">
+        <i class="fe fe-feed"></i>
+      </a>
+      
+    </li>
+  </ul>
+</nav>
+<div class="search-form-wrap">
+  <div class="local-search local-search-plugin">
+  <input type="search" id="local-search-input" class="local-search-input" placeholder="Search...">
+  <div id="local-search-result" class="local-search-result"></div>
+</div>
+</div>
+  </aside>
+  
+<script src="/js/jquery-2.0.3.min.js"></script>
+
+
+<script src="/js/jquery.justifiedGallery.min.js"></script>
+
+
+<script src="/js/lazyload.min.js"></script>
+
+
+<script src="/js/busuanzi-2.3.pure.min.js"></script>
+
+
+
+<script src="/fancybox/jquery.fancybox.min.js"></script>
+
+
+
+
+
+
+<script src="/js/ocean.js"></script>
+
+</body>
+
+</html>
