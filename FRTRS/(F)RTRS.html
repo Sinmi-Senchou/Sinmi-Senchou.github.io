@@ -169,10 +169,7 @@
             border-color: rgba(42,161,152,0.25);
         }
 
-        .frequency-display {
-            text-align: center;
-            margin-bottom: 10px;
-        }
+        .frequency-display { text-align: center; margin-bottom: 10px; }
 
         .freq-label {
             font-size: 0.7rem;
@@ -225,11 +222,7 @@
             word-break: break-word;
         }
 
-        .song-artist {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            margin-top: 4px;
-        }
+        .song-artist { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
 
         .song-index {
             font-size: 0.7rem;
@@ -247,10 +240,7 @@
             opacity: 0.7;
         }
 
-        .progress-container {
-            margin-bottom: 10px;
-            padding: 0 4px;
-        }
+        .progress-container { margin-bottom: 10px; padding: 0 4px; }
 
         .progress-time-row {
             display: flex;
@@ -308,7 +298,6 @@
             text-overflow: ellipsis;
             white-space: nowrap;
         }
-
         .up-next-time {
             font-family: var(--font-mono);
             font-size: 0.73rem;
@@ -351,16 +340,8 @@
             background: rgba(42,161,152,0.12);
         }
 
-        .volume-slider-container {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .volume-icon {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-        }
+        .volume-slider-container { display: flex; align-items: center; gap: 8px; }
+        .volume-icon { font-size: 1.2rem; color: var(--text-secondary); }
 
         .volume-slider {
             -webkit-appearance: none;
@@ -404,18 +385,9 @@
             opacity: 0.7;
             transition: opacity 0.2s;
         }
+        .schedule-toggle:hover { opacity: 1; color: var(--accent); }
 
-        .schedule-toggle:hover {
-            opacity: 1;
-            color: var(--accent);
-        }
-
-        .schedule-arrow {
-            transition: transform 0.3s;
-            display: inline-block;
-            font-size: 0.65rem;
-        }
-
+        .schedule-arrow { transition: transform 0.3s; display: inline-block; font-size: 0.65rem; }
         .schedule-arrow.open { transform: rotate(180deg); }
 
         .schedule-table-wrapper {
@@ -423,11 +395,7 @@
             overflow: hidden;
             transition: max-height 0.5s, margin 0.3s;
         }
-
-        .schedule-table-wrapper.open {
-            max-height: 400px;
-            margin-top: 10px;
-        }
+        .schedule-table-wrapper.open { max-height: 400px; margin-top: 10px; }
 
         .schedule-table {
             width: 100%;
@@ -524,7 +492,7 @@
     <div class="frequency-display">
         <div class="freq-label">F R E Q U E N C Y</div>
         <div class="freq-number">
-            603<span style="font-size:0.7em;">.</span>37 <span class="freq-unit">MHz</span>
+            98<span style="font-size:0.7em;">.</span>7 <span class="freq-unit">MHz</span>
         </div>
     </div>
 
@@ -591,16 +559,12 @@
         // ★★★ 电台第一首歌的开始时间（本地时间） ★★★
         const RADIO_START = new Date(2026, 6, 29, 0, 0, 0); // 2026年7月29日 00:00:00
 
-        // ★★★ 手动播放列表（代替CSV） ★★★
-        // 格式：每一条都是数组 [文件名, 时长, 歌曲名, 艺术家]
-        // 时长支持 "MM:SS" 或纯秒数
-        // 文件名必须与 music/ 文件夹内的文件完全一致（包括扩展名）
+        // ★★★ 手动播放列表 ★★★
         const manualPlaylist = [
             ['DDBY - 流星阶段.mp3', '03:33', '流星阶段', 'DDBY'],
             ['ginkiha - 聖輦船の風景.mp3', '03:53', '聖輦船の風景', 'ginkiha'],
-            // 在这里添加更多歌曲，例如：
+            // 添加更多歌曲，例如：
             // ['song2.mp3', '04:15', '第二首歌', '歌手B'],
-            // ['song3.mp3', '02:58', '第三首歌', '歌手C'],
         ];
 
         const LOOP_PLAYLIST = true;
@@ -710,7 +674,7 @@
             }).filter(t => t.filename && t.durationSec > 0);
 
             if (playlist.length === 0) {
-                showToast('❌ 播放列表为空，请检查手动配置的歌曲列表', true);
+                showToast('❌ 播放列表为空或所有歌曲时长无效', true);
                 scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:#e74c3c;">列表为空</td></tr>';
                 return false;
             }
@@ -775,14 +739,27 @@
 
         // ==================== 播放控制 ====================
         function playTrackAt(trackIndex, offsetSec) {
-            if (trackIndex < 0 || trackIndex >= playlist.length) return false;
+            if (trackIndex < 0 || trackIndex >= playlist.length) {
+                console.warn('Invalid track index:', trackIndex);
+                return false;
+            }
             const track = playlist[trackIndex];
+
+            // 防止时长为0的歌曲导致无限递归
+            if (track.durationSec <= 0) {
+                console.warn('Track duration is zero, skipping:', track.filename);
+                currentTrackIndex = trackIndex;
+                switchToNextTrack();
+                return false;
+            }
+
             const audioSrc = MUSIC_PATH_PREFIX + track.filename;
 
             if (audioPlayer.src !== audioSrc || audioPlayer.readyState === 0) {
                 audioPlayer.src = audioSrc;
             }
-            audioPlayer.currentTime = Math.max(0, Math.min(offsetSec, track.durationSec));
+            const safeOffset = Math.max(0, Math.min(offsetSec, track.durationSec));
+            audioPlayer.currentTime = safeOffset;
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
 
             currentTrackIndex = trackIndex;
@@ -805,7 +782,10 @@
             if (currentTrackIndex < 0 || !currentTrackEndTime) return;
             const remainingMs = currentTrackEndTime - Date.now();
             if (remainingMs <= 0) {
-                switchToNextTrack();
+                // 立即切换，但增加微小延迟避免同步递归
+                setTimeout(() => {
+                    if (isPoweredOn && currentTrackIndex >= 0) switchToNextTrack();
+                }, 10);
                 return;
             }
             switchTimeoutId = setTimeout(() => switchToNextTrack(), remainingMs + 50);
@@ -838,13 +818,16 @@
         }
 
         function switchToNextTrack() {
-            if (!isPoweredOn) return;
+            if (!isPoweredOn || playlist.length === 0) return;
             const nextIndex = getNextTrackIndex();
-            if (nextIndex < 0) {
+
+            // 防止死循环：如果下一首索引无效或与当前相同，停止播放
+            if (nextIndex < 0 || nextIndex === currentTrackIndex) {
+                console.warn('No valid next track, stopping playback.');
                 stopPlayback();
-                statusBadge.textContent = '⏹ 播放结束';
+                statusBadge.textContent = '⏹ 播放异常停止';
                 statusBadge.className = 'status-badge offline';
-                songTitle.textContent = '今日节目已结束';
+                songTitle.textContent = '无法继续播放';
                 songTitle.className = 'no-song';
                 songArtist.textContent = '';
                 songIndex.textContent = '—';
@@ -855,14 +838,15 @@
                 upNextTime.textContent = '';
                 return;
             }
+
             const now = Date.now();
             const nextTrack = playlist[nextIndex];
             let offsetSec = 0;
             if (now > nextTrack.startTime) {
                 offsetSec = (now - nextTrack.startTime) / 1000;
-                if (offsetSec > nextTrack.durationSec) offsetSec = 0;
+                if (offsetSec > nextTrack.durationSec || offsetSec < 0) offsetSec = 0;
             }
-            playTrackAt(nextIndex, Math.max(0, offsetSec));
+            playTrackAt(nextIndex, offsetSec);
         }
 
         function stopPlayback() {
@@ -1114,7 +1098,6 @@
             updateClock();
             setInterval(updateClock, 1000);
 
-            // 从手动数组构建播放列表
             if (buildPlaylistFromManual()) {
                 buildSchedule();
                 renderScheduleTable();
