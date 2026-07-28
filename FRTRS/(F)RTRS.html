@@ -425,8 +425,8 @@
 
         const LOOP_PLAYLIST = true;
         const PRELOAD_BEFORE_END = 12;
-        const SCHEDULE_WINDOW_HOURS = 2; // 未来显示的小时数
-        const SCHEDULE_REFRESH_INTERVAL = 60000; // 时间表刷新间隔（毫秒）
+        const SCHEDULE_WINDOW_HOURS = 2;
+        const SCHEDULE_REFRESH_INTERVAL = 60000;
         const MAX_CONSECUTIVE_SWITCHES = 5;
 
         // ==================== DOM引用 ====================
@@ -458,7 +458,7 @@
         let totalPlaylistDuration = 0;
         let isPoweredOn = false;
         let currentTrackIndex = -1;
-        let currentTrackStartTime = null;
+        let currentTrackStartTime = null; // 当前歌曲在本次循环中的实际开始时间（毫秒时间戳）
         let currentTrackEndTime = null;
         let switchTimeoutId = null;
         let progressAnimFrameId = null;
@@ -529,7 +529,7 @@
                 const durationSec = parseDuration(row[1]);
                 const title = row[2] || filename.replace(/\.[^.]+$/, '');
                 const artist = row[3] || '未知艺术家';
-                return { filename, durationSec, title, artist, startTime: null, endTime: null };
+                return { filename, durationSec, title, artist };
             }).filter(t => t.filename && t.durationSec > 0);
 
             if (playlist.length === 0) {
@@ -550,53 +550,63 @@
             }
         }
 
-        // ==================== 定位当前播放位置 ====================
-        function findTrackAtTime(timestampMs) {
+        // ==================== 核心：基于时间戳定位 ====================
+        /**
+         * 根据给定时间戳，返回应该播放的歌曲索引、在当前周期的实际开始时间、偏移秒数等
+         */
+        function getPositionForTimestamp(timestampMs) {
             const radioStartMs = RADIO_START.getTime();
             if (timestampMs < radioStartMs) {
                 return {
-                    trackIndex: 0, offsetSec: 0,
-                    trackStartMs: playlist[0]?.startTime || radioStartMs,
-                    trackEndMs: playlist[0]?.endTime || radioStartMs,
-                    cycleNumber: 0, beforeStart: true
+                    trackIndex: 0,
+                    offsetSec: 0,
+                    actualStartMs: radioStartMs,
+                    actualEndMs: radioStartMs + playlist[0].durationSec * 1000,
+                    beforeStart: true
                 };
             }
 
-            let elapsedMs = timestampMs - radioStartMs;
-            if (!LOOP_PLAYLIST && elapsedMs >= totalPlaylistDuration * 1000) {
-                return { trackIndex: -1, offsetSec: 0, trackStartMs: 0, trackEndMs: 0, cycleNumber: 0, pastEnd: true };
-            }
-
             const totalMs = totalPlaylistDuration * 1000;
+            let elapsedMs = timestampMs - radioStartMs;
             let cycleNumber = 0;
             if (LOOP_PLAYLIST && totalMs > 0) {
                 cycleNumber = Math.floor(elapsedMs / totalMs);
                 elapsedMs = elapsedMs % totalMs;
+            } else if (!LOOP_PLAYLIST && elapsedMs >= totalMs) {
+                return { trackIndex: -1, offsetSec: 0, actualStartMs: 0, actualEndMs: 0, pastEnd: true };
             }
 
+            // 查找当前播放的歌曲
             for (let i = 0; i < playlist.length; i++) {
-                const relStart = playlist[i].startTime - radioStartMs;
-                const relEnd = playlist[i].endTime - radioStartMs;
+                const trackStart = playlist[i].startTime;
+                const trackEnd = playlist[i].endTime;
+                const relStart = trackStart - radioStartMs;
+                const relEnd = trackEnd - radioStartMs;
                 if (elapsedMs >= relStart && elapsedMs < relEnd) {
                     const offsetSec = (elapsedMs - relStart) / 1000;
+                    const actualStartMs = trackStart + cycleNumber * totalMs;
+                    const actualEndMs = trackEnd + cycleNumber * totalMs;
                     return {
                         trackIndex: i,
                         offsetSec: Math.max(0, Math.min(offsetSec, playlist[i].durationSec)),
-                        trackStartMs: playlist[i].startTime,
-                        trackEndMs: playlist[i].endTime,
+                        actualStartMs,
+                        actualEndMs,
                         cycleNumber
                     };
                 }
             }
-            return { trackIndex: 0, offsetSec: 0, trackStartMs: playlist[0]?.startTime || radioStartMs, trackEndMs: playlist[0]?.endTime || radioStartMs, cycleNumber: 0 };
-        }
-
-        function getCurrentPlaybackPosition() {
-            return findTrackAtTime(Date.now());
+            // 兜底：回到第一首开头
+            const actualStartMs = playlist[0].startTime + cycleNumber * totalMs;
+            return {
+                trackIndex: 0,
+                offsetSec: 0,
+                actualStartMs,
+                actualEndMs: actualStartMs + playlist[0].durationSec * 1000
+            };
         }
 
         // ==================== 播放控制 ====================
-        function playTrackAt(trackIndex, offsetSec) {
+        function playTrackAtIndex(trackIndex, offsetSec, actualStartMs, actualEndMs) {
             if (trackIndex < 0 || trackIndex >= playlist.length) return false;
             const track = playlist[trackIndex];
             const audioSrc = MUSIC_PATH_PREFIX + track.filename;
@@ -608,8 +618,8 @@
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
 
             currentTrackIndex = trackIndex;
-            currentTrackStartTime = track.startTime;
-            currentTrackEndTime = track.endTime;
+            currentTrackStartTime = actualStartMs;
+            currentTrackEndTime = actualEndMs;
 
             updateNowPlayingDisplay();
             updateUpNextDisplay();
@@ -676,35 +686,18 @@
 
         function switchToNextTrack() {
             if (!isPoweredOn) return;
-            const nextIndex = getNextTrackIndex();
-            if (nextIndex < 0) {
+            const now = Date.now();
+            const pos = getPositionForTimestamp(now);
+            if (pos.pastEnd) {
                 stopPlayback();
                 statusBadge.textContent = '⏹ 播放结束';
                 statusBadge.className = 'status-badge offline';
                 songTitle.textContent = '今日节目已结束';
                 songTitle.className = 'no-song';
-                songArtist.textContent = '';
-                songIndex.textContent = '—';
-                progressBar.style.width = '0%';
-                progressCurrent.textContent = '00:00';
-                progressTotal.textContent = '00:00';
-                upNextInfo.textContent = '—';
-                upNextTime.textContent = '';
                 return;
             }
-
-            const now = Date.now();
-            const nextTrack = playlist[nextIndex];
-            let offsetSec = 0;
-            if (now > nextTrack.startTime) {
-                offsetSec = (now - nextTrack.startTime) / 1000;
-                if (offsetSec >= nextTrack.durationSec) {
-                    offsetSec = 0;
-                    nextTrack.startTime = now;
-                    nextTrack.endTime = now + nextTrack.durationSec * 1000;
-                }
-            }
-            playTrackAt(nextIndex, Math.max(0, offsetSec));
+            // 直接使用当前时间戳对应的歌曲位置，避免手动计算偏移
+            playTrackAtIndex(pos.trackIndex, pos.offsetSec, pos.actualStartMs, pos.actualEndMs);
         }
 
         function stopPlayback() {
@@ -722,13 +715,14 @@
             updateScheduleTableHighlight();
         }
 
-        // ==================== 手动校准功能（替代自动同步） ====================
+        // ==================== 手动校准（核心功能） ====================
         function manualCalibrate() {
             if (!isPoweredOn) {
                 showToast('请先打开收音机', true);
                 return;
             }
-            const pos = getCurrentPlaybackPosition();
+            const now = Date.now();
+            const pos = getPositionForTimestamp(now);
             if (pos.pastEnd) {
                 showToast('⏹ 节目已结束', true);
                 return;
@@ -737,10 +731,7 @@
                 showToast('⏳ 电台尚未开播', true);
                 return;
             }
-
-            // 跳转到理论位置
-            playTrackAt(pos.trackIndex, pos.offsetSec);
-            // 刷新时间表
+            playTrackAtIndex(pos.trackIndex, pos.offsetSec, pos.actualStartMs, pos.actualEndMs);
             renderScheduleTable();
             showToast(`⏱ 已校准至 ${formatTime(new Date())} 对应位置`);
         }
@@ -760,7 +751,8 @@
             liveDot.style.animation = 'livePulse 2s ease-in-out infinite';
             liveDot.style.background = 'var(--success)';
 
-            const pos = getCurrentPlaybackPosition();
+            const now = Date.now();
+            const pos = getPositionForTimestamp(now);
             if (pos.pastEnd) {
                 statusBadge.textContent = '⏹ 播放结束';
                 statusBadge.className = 'status-badge offline';
@@ -774,11 +766,11 @@
                 songTitle.textContent = '电台尚未开播';
                 songTitle.className = 'no-song';
                 songArtist.textContent = `预计开播时间：${formatDateTime(RADIO_START)}`;
-                const waitMs = RADIO_START.getTime() - Date.now();
+                const waitMs = RADIO_START.getTime() - now;
                 if (waitMs > 0 && waitMs < 86400000) {
                     switchTimeoutId = setTimeout(() => {
                         if (isPoweredOn) {
-                            playTrackAt(0, 0);
+                            playTrackAtIndex(0, 0, RADIO_START.getTime(), RADIO_START.getTime() + playlist[0].durationSec * 1000);
                             statusBadge.textContent = '🟢 直播中';
                             statusBadge.className = 'status-badge';
                         }
@@ -787,7 +779,7 @@
                 return;
             }
 
-            playTrackAt(pos.trackIndex, pos.offsetSec);
+            playTrackAtIndex(pos.trackIndex, pos.offsetSec, pos.actualStartMs, pos.actualEndMs);
             startProgressUpdater();
             startScheduleRefresher();
         }
@@ -812,7 +804,7 @@
             updateScheduleTableHighlight();
         }
 
-        // ==================== 时间表刷新（未来2小时） ====================
+        // ==================== 时间表（未来2小时） ====================
         function startScheduleRefresher() {
             if (scheduleRefreshIntervalId) clearInterval(scheduleRefreshIntervalId);
             scheduleRefreshIntervalId = setInterval(() => {
@@ -829,36 +821,27 @@
             const now = Date.now();
             const windowEnd = now + SCHEDULE_WINDOW_HOURS * 3600 * 1000;
             let rows = [];
-            let foundCurrent = false;
-
-            // 考虑到循环，我们需要遍历多个周期
             const totalMs = totalPlaylistDuration * 1000;
-            const startCycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
-            // 检查前后几个周期以确保覆盖窗口
-            for (let cycle = startCycle - 1; cycle <= startCycle + 1; cycle++) {
-                if (cycle < 0 && !LOOP_PLAYLIST) continue;
-                if (cycle > 0 && !LOOP_PLAYLIST) break;
 
+            // 确定从哪个周期开始扫描
+            const startCycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
+            // 扫描当前周期及下一个周期（确保覆盖未来2小时）
+            for (let cycle = startCycle; cycle <= startCycle + 1; cycle++) {
+                if (cycle < 0 || (!LOOP_PLAYLIST && cycle > 0)) continue;
                 for (let i = 0; i < playlist.length; i++) {
                     const track = playlist[i];
-                    let startMs, endMs;
-                    if (LOOP_PLAYLIST && totalMs > 0) {
-                        startMs = track.startTime + cycle * totalMs;
-                        endMs = track.endTime + cycle * totalMs;
-                    } else {
-                        startMs = track.startTime;
-                        endMs = track.endTime;
-                    }
+                    const baseStart = track.startTime;
+                    const baseEnd = track.endTime;
+                    const startMs = baseStart + cycle * totalMs;
+                    const endMs = baseEnd + cycle * totalMs;
 
-                    // 只显示与窗口有交集的部分
                     if (endMs <= now || startMs >= windowEnd) continue;
 
                     const startDate = new Date(startMs);
                     const timeStr = formatTime(startDate);
                     const durStr = formatSeconds(track.durationSec);
-                    const isNowPlaying = isPoweredOn && i === currentTrackIndex && 
-                                        ( (LOOP_PLAYLIST && cycle === startCycle) || (!LOOP_PLAYLIST) );
-                    if (isNowPlaying) foundCurrent = true;
+                    // 判断是否正在播放：索引相同 且 当前时间落在该区间内
+                    const isNowPlaying = isPoweredOn && i === currentTrackIndex && now >= startMs && now < endMs;
 
                     rows.push({
                         startMs,
@@ -872,7 +855,6 @@
                 }
             }
 
-            // 排序
             rows.sort((a, b) => a.startMs - b.startMs);
 
             if (rows.length === 0) {
@@ -890,17 +872,11 @@
                 });
                 scheduleTbody.innerHTML = html;
             }
-
-            updateScheduleTableHighlight();
         }
 
         function updateScheduleTableHighlight() {
-            // 高亮由 renderScheduleTable 直接处理，此函数保留作为兼容
-            const rows = scheduleTbody.querySelectorAll('tr');
-            rows.forEach((row) => {
-                const index = parseInt(row.dataset.index);
-                row.classList.toggle('now-playing-row', !isNaN(index) && index === currentTrackIndex && isPoweredOn);
-            });
+            // 高亮已在 renderScheduleTable 中处理，此处保留用于外部调用刷新
+            renderScheduleTable();
         }
 
         function escapeHtml(str) {
@@ -928,11 +904,19 @@
             }
             const nextTrack = playlist[nextIndex];
             upNextInfo.textContent = `${nextTrack.title} — ${nextTrack.artist}`;
-            let nextStartMs = nextTrack.startTime;
-            if (LOOP_PLAYLIST && nextStartMs < Date.now()) {
+            // 计算下一首的实际开始时间
+            const now = Date.now();
+            const pos = getPositionForTimestamp(now);
+            let nextStartMs;
+            if (pos.trackIndex === nextIndex - 1 || (pos.trackIndex === playlist.length-1 && nextIndex === 0)) {
+                // 直接使用当前歌曲结束时间
+                nextStartMs = currentTrackEndTime;
+            } else {
+                // 基于时间表计算
                 const totalMs = totalPlaylistDuration * 1000;
-                const cyclesPassed = Math.floor((Date.now() - nextStartMs) / totalMs) + 1;
-                nextStartMs += cyclesPassed * totalMs;
+                const cycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
+                nextStartMs = nextTrack.startTime + (LOOP_PLAYLIST ? cycle * totalMs : 0);
+                if (nextStartMs < now) nextStartMs += totalMs;
             }
             upNextTime.textContent = formatTime(new Date(nextStartMs));
         }
@@ -945,7 +929,7 @@
         function startProgressUpdater() {
             if (progressAnimFrameId) cancelAnimationFrame(progressAnimFrameId);
             function update() {
-                if (!isPoweredOn || currentTrackIndex < 0) {
+                if (!isPoweredOn || currentTrackIndex < 0 || !currentTrackStartTime) {
                     progressAnimFrameId = requestAnimationFrame(update);
                     return;
                 }
@@ -991,7 +975,7 @@
         scheduleToggle.addEventListener('click', () => {
             const isOpen = scheduleWrapper.classList.toggle('open');
             scheduleArrow.classList.toggle('open', isOpen);
-            if (isOpen) renderScheduleTable(); // 展开时刷新一次
+            if (isOpen) renderScheduleTable();
         });
 
         document.addEventListener('keydown', (e) => {
