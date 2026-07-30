@@ -73,21 +73,26 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
+            margin: 0;
+            padding: 0;
+            background: var(--bg); /* 备选背景 */
+            font-family: var(--font-sans);
+            color: var(--text);
+        }
+
+        .radio-wrapper {
             background: var(--bg);
             background-image:
                 radial-gradient(ellipse at 50% 30%, rgba(34,85,85,0.15) 0%, transparent 70%),
                 radial-gradient(ellipse at 20% 70%, rgba(42,161,152,0.05) 0%, transparent 60%),
                 radial-gradient(ellipse at 80% 60%, rgba(34,85,85,0.08) 0%, transparent 60%);
-            font-family: var(--font-sans);
-            color: var(--text);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 20px;
-            user-select: none;
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
+            box-sizing: border-box;
+            width: 100%;
         }
 
         .radio-device {
@@ -100,6 +105,7 @@
                         inset 0 1px 0 rgba(255,255,255,0.03), 0 0 0 1px rgba(34,85,85,0.15);
             position: relative;
             overflow: hidden;
+            box-sizing: border-box;
         }
 
         .radio-device::before {
@@ -368,8 +374,9 @@
             border-color: rgba(231,76,60,0.4);
         }
 
+        /* 移动端适配 */
         @media (max-width: 480px) {
-            body { padding: 10px; }
+            .radio-wrapper { padding: 10px; }
             .radio-device { padding: 20px 14px 16px; border-radius: 20px; }
             .freq-number { font-size: 2.4rem; }
             .song-title { font-size: 1.1rem; }
@@ -390,81 +397,83 @@
 </head>
 <body>
 
-<div class="radio-device" id="radioDevice">
-    <div class="top-bar">
-        <div class="live-clock" id="liveClock">
-            <span class="live-dot" id="liveDot"></span>
-            <span id="clockTime">--:--:--</span>
+<div class="radio-wrapper">
+    <div class="radio-device" id="radioDevice">
+        <div class="top-bar">
+            <div class="live-clock" id="liveClock">
+                <span class="live-dot" id="liveDot"></span>
+                <span id="clockTime">--:--:--</span>
+            </div>
+            <div class="status-badge offline" id="statusBadge">🔴 已关机</div>
         </div>
-        <div class="status-badge offline" id="statusBadge">🔴 已关机</div>
-    </div>
 
-    <div class="frequency-display">
-        <div class="freq-label">F R E Q U E N C Y</div>
-        <div class="freq-number">
-            60<span style="font-size:0.7em;">.</span>3 <span class="freq-unit">MHz</span>
+        <div class="frequency-display">
+            <div class="freq-label">F R E Q U E N C Y</div>
+            <div class="freq-number">
+                60<span style="font-size:0.7em;">.</span>3 <span class="freq-unit">MHz</span>
+            </div>
         </div>
-    </div>
 
-    <div class="now-playing-section" id="nowPlayingSection">
-        <div class="song-index" id="songIndex">—</div>
-        <div class="song-title no-song" id="songTitle">按下电源键开启收音机</div>
-        <div class="song-artist" id="songArtist"></div>
-    </div>
-
-    <div class="progress-container">
-        <div class="progress-time-row">
-            <span id="progressCurrent">00:00</span>
-            <span id="progressTotal">00:00</span>
+        <div class="now-playing-section" id="nowPlayingSection">
+            <div class="song-index" id="songIndex">—</div>
+            <div class="song-title no-song" id="songTitle">按下电源键开启收音机</div>
+            <div class="song-artist" id="songArtist"></div>
         </div>
-        <div class="progress-bar-outer">
-            <div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div>
+
+        <div class="progress-container">
+            <div class="progress-time-row">
+                <span id="progressCurrent">00:00</span>
+                <span id="progressTotal">00:00</span>
+            </div>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div>
+            </div>
         </div>
-    </div>
 
-    <div class="up-next" id="upNext">
-        <span class="up-next-icon">⏭</span>
-        <span class="up-next-info" id="upNextInfo">—</span>
-        <span class="up-next-time" id="upNextTime"></span>
-    </div>
-
-    <div class="controls-row">
-        <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
-        <button class="btn-calibrate" id="btnCalibrate" title="手动校准到当前时间">⏱</button>
-        <button class="btn-timer" id="btnTimer" title="定时关闭">⏲</button>
-        <div class="volume-slider-container">
-            <span class="volume-icon">🔈</span>
-            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75" title="音量">
-            <span class="volume-value" id="volumeValue">75%</span>
+        <div class="up-next" id="upNext">
+            <span class="up-next-icon">⏭</span>
+            <span class="up-next-info" id="upNextInfo">—</span>
+            <span class="up-next-time" id="upNextTime"></span>
         </div>
-    </div>
 
-    <!-- 定时关闭弹出菜单 -->
-    <div class="timer-popup" id="timerPopup">
-        <button class="timer-option" data-minutes="15">15 分钟后关闭</button>
-        <button class="timer-option" data-minutes="30">30 分钟后关闭</button>
-        <button class="timer-option" data-minutes="60">60 分钟后关闭</button>
-        <button class="timer-option" data-minutes="120">120 分钟后关闭</button>
-        <button class="timer-option timer-cancel" id="timerCancelBtn">取消定时</button>
-    </div>
+        <div class="controls-row">
+            <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
+            <button class="btn-calibrate" id="btnCalibrate" title="手动校准到当前时间">⏱</button>
+            <button class="btn-timer" id="btnTimer" title="定时关闭">⏲</button>
+            <div class="volume-slider-container">
+                <span class="volume-icon">🔈</span>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75" title="音量">
+                <span class="volume-value" id="volumeValue">75%</span>
+            </div>
+        </div>
 
-    <div class="schedule-toggle" id="scheduleToggle">
-        📋 未来2小时时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
-    </div>
-    <div class="schedule-table-wrapper" id="scheduleWrapper">
-        <table class="schedule-table" id="scheduleTable">
-            <thead>
-            <tr>
-                <th class="time-col">开始时间</th>
-                <th class="dur-col">时长</th>
-                <th class="title-col">歌曲</th>
-                <th class="artist-col">艺术家</th>
-            </tr>
-            </thead>
-            <tbody id="scheduleTbody">
-            <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
-            </tbody>
-        </table>
+        <!-- 定时关闭弹出菜单 -->
+        <div class="timer-popup" id="timerPopup">
+            <button class="timer-option" data-minutes="15">15 分钟后关闭</button>
+            <button class="timer-option" data-minutes="30">30 分钟后关闭</button>
+            <button class="timer-option" data-minutes="60">60 分钟后关闭</button>
+            <button class="timer-option" data-minutes="120">120 分钟后关闭</button>
+            <button class="timer-option timer-cancel" id="timerCancelBtn">取消定时</button>
+        </div>
+
+        <div class="schedule-toggle" id="scheduleToggle">
+            📋 未来2小时时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
+        </div>
+        <div class="schedule-table-wrapper" id="scheduleWrapper">
+            <table class="schedule-table" id="scheduleTable">
+                <thead>
+                <tr>
+                    <th class="time-col">开始时间</th>
+                    <th class="dur-col">时长</th>
+                    <th class="title-col">歌曲</th>
+                    <th class="artist-col">艺术家</th>
+                </tr>
+                </thead>
+                <tbody id="scheduleTbody">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -472,7 +481,7 @@
 <div id="toastContainer"></div>
 
 <script>
-    
+    // ==================== 核心 JavaScript（完全未改动） ====================
     (function() {
         // ==================== 配置区 ====================
         const MUSIC_PATH_PREFIX = 'music/';
@@ -557,8 +566,8 @@
         let preloadAudio = null;
         let toastTimeoutId = null;
         let consecutiveSwitchCount = 0;
-        let autoOffTimeoutId = null;       // 定时关机定时器
-        let autoOffTargetTime = null;      // 定时关机目标时间（时间戳，用于显示倒计时）
+        let autoOffTimeoutId = null;
+        let autoOffTargetTime = null;
 
         // ==================== 工具函数 ====================
         function parseDuration(durStr) {
@@ -659,7 +668,6 @@
             }
         }
 
-        // 定时器弹出菜单交互
         btnTimer.addEventListener('click', (e) => {
             e.stopPropagation();
             timerPopup.classList.toggle('show');
@@ -907,7 +915,7 @@
             statusBadge.className = 'status-badge';
             liveDot.style.animation = 'livePulse 2s ease-in-out infinite';
             liveDot.style.background = 'var(--success)';
-            updateStatusWithTimer(); // 显示定时信息
+            updateStatusWithTimer();
 
             const now = Date.now();
             const pos = getPositionForTimestamp(now);
@@ -943,7 +951,6 @@
         }
 
         function powerOff() {
-            // 清除定时关机
             cancelAutoOff();
             isPoweredOn = false;
             btnPower.classList.remove('on');
@@ -1077,7 +1084,6 @@
         function updateClock() {
             const now = new Date();
             clockTime.textContent = formatTime(now) + ' · ' + now.toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
-            // 同时更新定时关机倒计时显示
             if (isPoweredOn && autoOffTargetTime) {
                 updateStatusWithTimer();
             }
@@ -1116,7 +1122,6 @@
         });
 
         audioPlayer.addEventListener('error', () => {
-            // 关机后不提示错误
             if (!isPoweredOn) return;
             const track = playlist[currentTrackIndex];
             showToast(`⚠️ 无法播放：${track?.title || '未知歌曲'}`, true);
@@ -1169,7 +1174,6 @@
         }
         init();
     })();
-    
 </script>
 </body>
 </html>
