@@ -73,9 +73,8 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            margin: 0;
-            padding: 0;
-            background: var(--bg); /* 备选背景 */
+            margin: 0; padding: 0;
+            background: var(--bg);
             font-family: var(--font-sans);
             color: var(--text);
         }
@@ -89,6 +88,7 @@
             padding: 20px;
             box-sizing: border-box;
             width: 100%;
+            position: relative;
         }
 
         .radio-device {
@@ -100,7 +100,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3),
                         inset 0 1px 0 rgba(255,255,255,0.03), 0 0 0 1px rgba(34,85,85,0.15);
             position: relative;
-            overflow: hidden;
+            overflow: visible;
             box-sizing: border-box;
         }
 
@@ -171,21 +171,34 @@
             -webkit-text-fill-color: var(--text-secondary);
         }
 
+        /* 歌曲信息区 */
         .now-playing-section {
             background: rgba(0,0,0,0.25); border-radius: 16px; padding: 18px 20px;
             margin-bottom: 14px; border: 1px solid var(--border);
-            text-align: center; min-height: 90px;
+            text-align: center;
+            height: 90px;
             display: flex; flex-direction: column; justify-content: center;
-            transition: all 0.4s;
+            overflow: hidden;
         }
         .song-title {
             font-size: 1.3rem; font-weight: 600; color: #e0f0ef;
-            letter-spacing: 0.3px; line-height: 1.3; word-break: break-word;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
         }
-        .song-artist { font-size: 0.9rem; color: var(--text-secondary); margin-top: 4px; }
+        .song-artist {
+            font-size: 0.9rem; color: var(--text-secondary);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
         .song-index {
             font-size: 0.7rem; color: var(--accent); letter-spacing: 1px;
-            text-transform: uppercase; margin-bottom: 4px; opacity: 0.8;
+            text-transform: uppercase; margin-bottom: 2px; opacity: 0.8;
         }
         .no-song {
             color: var(--text-secondary); font-style: italic;
@@ -259,6 +272,7 @@
         }
         .btn-calibrate:active, .btn-timer:active { transform: scale(0.95); }
 
+        /* 定时弹出菜单 */
         .timer-popup {
             display: none;
             position: absolute;
@@ -273,7 +287,7 @@
             flex-direction: column;
             gap: 8px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.6);
-            min-width: 180px;
+            min-width: 200px;
         }
         .timer-popup.show {
             display: flex;
@@ -295,6 +309,33 @@
         .timer-cancel {
             color: #e74c3c;
             font-weight: 600;
+        }
+        .custom-timer-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .custom-timer-input {
+            flex: 1;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            width: 60px;
+        }
+        .custom-timer-btn {
+            padding: 6px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
         }
 
         .volume-slider-container { display: flex; align-items: center; gap: 8px; }
@@ -324,20 +365,36 @@
         .schedule-arrow { transition: transform 0.3s; display: inline-block; font-size: 0.65rem; }
         .schedule-arrow.open { transform: rotate(180deg); }
 
+        /* 下拉时间表浮层 */
         .schedule-table-wrapper {
-            max-height: 0; overflow: hidden;
-            transition: max-height 0.5s, margin 0.3s;
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 580px;
+            max-height: 0;
+            overflow: hidden;
+            background: #1a2e2e;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
+            z-index: 40;
+            transition: max-height 0.4s ease;
         }
-        .schedule-table-wrapper.open { max-height: 400px; margin-top: 10px; }
-
+        .schedule-table-wrapper.open {
+            max-height: 300px;
+        }
         .schedule-table {
             width: 100%; border-collapse: collapse; font-size: 0.73rem;
-            background: rgba(0,0,0,0.2); border-radius: 10px;
-            display: block; max-height: 280px; overflow-y: auto;
+            background: transparent;
+            display: block;
+            max-height: 300px;
+            overflow-y: auto;
         }
         .schedule-table thead { position: sticky; top: 0; z-index: 1; }
         .schedule-table th {
-            background: rgba(0,0,0,0.6); color: var(--accent); font-weight: 500;
+            background: #0f2a2a;
+            color: var(--accent); font-weight: 500;
             padding: 8px 10px; text-align: left; font-size: 0.68rem;
             text-transform: uppercase; white-space: nowrap;
         }
@@ -376,7 +433,7 @@
             .radio-device { padding: 20px 14px 16px; border-radius: 20px; }
             .freq-number { font-size: 2.4rem; }
             .song-title { font-size: 1.1rem; }
-            .now-playing-section { padding: 14px 12px; min-height: 70px; }
+            .now-playing-section { padding: 12px 10px; height: 70px; }
             .btn-power, .btn-calibrate, .btn-timer { width: 48px; height: 48px; font-size: 1.2rem; }
             .btn-calibrate, .btn-timer { font-size: 1rem; }
             .volume-slider { width: 55px; }
@@ -384,7 +441,7 @@
             .schedule-table th, .schedule-table td { padding: 5px 6px; }
             .timer-popup {
                 bottom: 70px;
-                min-width: 160px;
+                min-width: 180px;
                 padding: 10px;
             }
             .timer-option { font-size: 0.8rem; padding: 6px 10px; }
@@ -449,27 +506,33 @@
             <button class="timer-option" data-minutes="30">30 分钟后关闭</button>
             <button class="timer-option" data-minutes="60">60 分钟后关闭</button>
             <button class="timer-option" data-minutes="120">120 分钟后关闭</button>
+            <div class="custom-timer-row">
+                <input type="number" class="custom-timer-input" id="customTimerInput" placeholder="分钟" min="1" max="1440">
+                <button class="custom-timer-btn" id="customTimerBtn">设定</button>
+            </div>
             <button class="timer-option timer-cancel" id="timerCancelBtn">取消定时</button>
         </div>
 
         <div class="schedule-toggle" id="scheduleToggle">
-            📋 未来2小时时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
+            📋 时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
         </div>
-        <div class="schedule-table-wrapper" id="scheduleWrapper">
-            <table class="schedule-table" id="scheduleTable">
-                <thead>
-                <tr>
-                    <th class="time-col">开始时间</th>
-                    <th class="dur-col">时长</th>
-                    <th class="title-col">歌曲</th>
-                    <th class="artist-col">艺术家</th>
-                </tr>
-                </thead>
-                <tbody id="scheduleTbody">
-                <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
-                </tbody>
-            </table>
-        </div>
+    </div>
+
+    <!-- 下拉时间表浮层 -->
+    <div class="schedule-table-wrapper" id="scheduleWrapper">
+        <table class="schedule-table" id="scheduleTable">
+            <thead>
+            <tr>
+                <th class="time-col">开始时间</th>
+                <th class="dur-col">时长</th>
+                <th class="title-col">歌曲</th>
+                <th class="artist-col">艺术家</th>
+            </tr>
+            </thead>
+            <tbody id="scheduleTbody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
+            </tbody>
+        </table>
     </div>
 </div>
 
@@ -477,7 +540,7 @@
 <div id="toastContainer"></div>
 
 <script>
-    // ==================== 核心 JavaScript（完全未改动） ====================
+    
     (function() {
         // ==================== 配置区 ====================
         const MUSIC_PATH_PREFIX = 'music/';
@@ -557,6 +620,8 @@
         const scheduleTbody = document.getElementById('scheduleTbody');
         const nowPlayingSection = document.getElementById('nowPlayingSection');
         const toastContainer = document.getElementById('toastContainer');
+        const customTimerInput = document.getElementById('customTimerInput');
+        const customTimerBtn = document.getElementById('customTimerBtn');
 
         // ==================== 状态变量 ====================
         let playlist = [];
@@ -616,12 +681,10 @@
             if (toastTimeoutId) clearTimeout(toastTimeoutId);
             const existing = toastContainer.querySelector('.message-toast');
             if (existing) existing.remove();
-
             const toast = document.createElement('div');
             toast.className = 'message-toast' + (isError ? ' error' : '');
             toast.textContent = message;
             toastContainer.appendChild(toast);
-
             toastTimeoutId = setTimeout(() => {
                 toast.style.opacity = '0';
                 toast.style.transition = 'opacity 0.4s ease';
@@ -673,6 +736,17 @@
             }
         }
 
+        // 自定义定时器
+        customTimerBtn.addEventListener('click', () => {
+            const val = parseInt(customTimerInput.value);
+            if (isNaN(val) || val < 1 || val > 1440) {
+                showToast('请输入1~1440之间的分钟数', true);
+                return;
+            }
+            setAutoOff(val);
+            timerPopup.classList.remove('show');
+        });
+
         btnTimer.addEventListener('click', (e) => {
             e.stopPropagation();
             timerPopup.classList.toggle('show');
@@ -707,7 +781,6 @@
                 const artist = row[3] || '未知艺术家';
                 return { filename, durationSec, title, artist };
             }).filter(t => t.filename && t.durationSec > 0);
-
             if (playlist.length === 0) {
                 showToast('❌ 播放列表为空，请检查配置', true);
                 return false;
@@ -726,19 +799,17 @@
             }
         }
 
-        // ==================== 核心：时间戳定位 ====================
+        // ==================== 时间戳定位 ====================
         function getPositionForTimestamp(timestampMs) {
             const radioStartMs = RADIO_START.getTime();
             if (timestampMs < radioStartMs) {
                 return {
-                    trackIndex: 0,
-                    offsetSec: 0,
+                    trackIndex: 0, offsetSec: 0,
                     actualStartMs: radioStartMs,
                     actualEndMs: radioStartMs + playlist[0].durationSec * 1000,
                     beforeStart: true
                 };
             }
-
             const totalMs = totalPlaylistDuration * 1000;
             let elapsedMs = timestampMs - radioStartMs;
             let cycleNumber = 0;
@@ -748,7 +819,6 @@
             } else if (!LOOP_PLAYLIST && elapsedMs >= totalMs) {
                 return { trackIndex: -1, offsetSec: 0, actualStartMs: 0, actualEndMs: 0, pastEnd: true };
             }
-
             for (let i = 0; i < playlist.length; i++) {
                 const trackStart = playlist[i].startTime;
                 const trackEnd = playlist[i].endTime;
@@ -761,16 +831,13 @@
                     return {
                         trackIndex: i,
                         offsetSec: Math.max(0, Math.min(offsetSec, playlist[i].durationSec)),
-                        actualStartMs,
-                        actualEndMs,
-                        cycleNumber
+                        actualStartMs, actualEndMs, cycleNumber
                     };
                 }
             }
             const actualStartMs = playlist[0].startTime + cycleNumber * totalMs;
             return {
-                trackIndex: 0,
-                offsetSec: 0,
+                trackIndex: 0, offsetSec: 0,
                 actualStartMs,
                 actualEndMs: actualStartMs + playlist[0].durationSec * 1000
             };
@@ -781,24 +848,19 @@
             if (trackIndex < 0 || trackIndex >= playlist.length) return false;
             const track = playlist[trackIndex];
             const audioSrc = MUSIC_PATH_PREFIX + track.filename;
-
             if (audioPlayer.src !== audioSrc || audioPlayer.readyState === 0) {
                 audioPlayer.src = audioSrc;
             }
             audioPlayer.currentTime = Math.max(0, Math.min(offsetSec, track.durationSec));
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
-
             currentTrackIndex = trackIndex;
             currentTrackStartTime = actualStartMs;
             currentTrackEndTime = actualEndMs;
-
             updateNowPlayingDisplay();
             updateUpNextDisplay();
             updateScheduleTableHighlight();
-
             const playPromise = audioPlayer.play();
             if (playPromise) playPromise.catch(() => {});
-
             scheduleNextTrackSwitch();
             return true;
         }
@@ -806,9 +868,7 @@
         function scheduleNextTrackSwitch() {
             if (switchTimeoutId) clearTimeout(switchTimeoutId);
             if (currentTrackIndex < 0 || !currentTrackEndTime) return;
-
             const remainingMs = currentTrackEndTime - Date.now();
-
             if (remainingMs <= 0) {
                 if (consecutiveSwitchCount >= MAX_CONSECUTIVE_SWITCHES) {
                     console.error('[电台] 连续切换次数过多，停止切换');
@@ -822,7 +882,6 @@
                 }, 0);
                 return;
             }
-
             consecutiveSwitchCount = 0;
             switchTimeoutId = setTimeout(() => {
                 if (isPoweredOn && currentTrackIndex >= 0) switchToNextTrack();
@@ -885,7 +944,6 @@
             updateScheduleTableHighlight();
         }
 
-        // ==================== 手动校准 ====================
         function manualCalibrate() {
             if (!isPoweredOn) {
                 showToast('请先打开收音机', true);
@@ -893,25 +951,15 @@
             }
             const now = Date.now();
             const pos = getPositionForTimestamp(now);
-            if (pos.pastEnd) {
-                showToast('⏹ 节目已结束', true);
-                return;
-            }
-            if (pos.beforeStart && !LOOP_PLAYLIST) {
-                showToast('⏳ 电台尚未开播', true);
-                return;
-            }
+            if (pos.pastEnd) { showToast('⏹ 节目已结束', true); return; }
+            if (pos.beforeStart && !LOOP_PLAYLIST) { showToast('⏳ 电台尚未开播', true); return; }
             playTrackAtIndex(pos.trackIndex, pos.offsetSec, pos.actualStartMs, pos.actualEndMs);
             renderScheduleTable();
             showToast(`⏱ 已校准至 ${formatTime(new Date())} 对应位置`);
         }
 
-        // ==================== 开机/关机 ====================
         function powerOn() {
-            if (playlist.length === 0) {
-                showToast('⚠️ 播放列表为空', true);
-                return;
-            }
+            if (playlist.length === 0) { showToast('⚠️ 播放列表为空', true); return; }
             isPoweredOn = true;
             consecutiveSwitchCount = 0;
             btnPower.classList.add('on');
@@ -921,7 +969,6 @@
             liveDot.style.animation = 'livePulse 2s ease-in-out infinite';
             liveDot.style.background = 'var(--success)';
             updateStatusWithTimer();
-
             const now = Date.now();
             const pos = getPositionForTimestamp(now);
             if (pos.pastEnd) {
@@ -949,7 +996,6 @@
                 }
                 return;
             }
-
             playTrackAtIndex(pos.trackIndex, pos.offsetSec, pos.actualStartMs, pos.actualEndMs);
             startProgressUpdater();
             startScheduleRefresher();
@@ -976,7 +1022,6 @@
             updateScheduleTableHighlight();
         }
 
-        // ==================== 时间表（未来2小时） ====================
         function startScheduleRefresher() {
             if (scheduleRefreshIntervalId) clearInterval(scheduleRefreshIntervalId);
             scheduleRefreshIntervalId = setInterval(() => {
@@ -989,12 +1034,10 @@
                 scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">暂无数据</td></tr>';
                 return;
             }
-
             const now = Date.now();
             const windowEnd = now + SCHEDULE_WINDOW_HOURS * 3600 * 1000;
             let rows = [];
             const totalMs = totalPlaylistDuration * 1000;
-
             const startCycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
             for (let cycle = startCycle; cycle <= startCycle + 1; cycle++) {
                 if (cycle < 0 || (!LOOP_PLAYLIST && cycle > 0)) continue;
@@ -1004,56 +1047,30 @@
                     const baseEnd = track.endTime;
                     const startMs = baseStart + cycle * totalMs;
                     const endMs = baseEnd + cycle * totalMs;
-
                     if (endMs <= now || startMs >= windowEnd) continue;
-
                     const startDate = new Date(startMs);
                     const timeStr = formatTime(startDate);
                     const durStr = formatSeconds(track.durationSec);
                     const isNowPlaying = isPoweredOn && i === currentTrackIndex && now >= startMs && now < endMs;
-
-                    rows.push({
-                        startMs,
-                        timeStr,
-                        durStr,
-                        title: track.title,
-                        artist: track.artist,
-                        isNowPlaying,
-                        index: i
-                    });
+                    rows.push({ startMs, timeStr, durStr, title: track.title, artist: track.artist, isNowPlaying, index: i });
                 }
             }
-
             rows.sort((a, b) => a.startMs - b.startMs);
-
             if (rows.length === 0) {
                 scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">未来2小时无节目</td></tr>';
             } else {
                 let html = '';
                 rows.forEach(row => {
                     const rowClass = row.isNowPlaying ? ' class="now-playing-row"' : '';
-                    html += `<tr${rowClass}>
-                        <td class="time-col">${row.timeStr}</td>
-                        <td class="dur-col">${row.durStr}</td>
-                        <td class="title-col" title="${escapeHtml(row.title)}">${escapeHtml(row.title)}</td>
-                        <td class="artist-col" title="${escapeHtml(row.artist)}">${escapeHtml(row.artist)}</td>
-                    </tr>`;
+                    html += `<tr${rowClass}><td class="time-col">${row.timeStr}</td><td class="dur-col">${row.durStr}</td><td class="title-col" title="${escapeHtml(row.title)}">${escapeHtml(row.title)}</td><td class="artist-col" title="${escapeHtml(row.artist)}">${escapeHtml(row.artist)}</td></tr>`;
                 });
                 scheduleTbody.innerHTML = html;
             }
         }
 
-        function updateScheduleTableHighlight() {
-            renderScheduleTable();
-        }
+        function updateScheduleTableHighlight() { renderScheduleTable(); }
+        function escapeHtml(str) { const div = document.createElement('div'); div.textContent = str; return div.innerHTML; }
 
-        function escapeHtml(str) {
-            const div = document.createElement('div');
-            div.textContent = str;
-            return div.innerHTML;
-        }
-
-        // ==================== UI更新 ====================
         function updateNowPlayingDisplay() {
             if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) return;
             const track = playlist[currentTrackIndex];
@@ -1089,9 +1106,7 @@
         function updateClock() {
             const now = new Date();
             clockTime.textContent = formatTime(now) + ' · ' + now.toLocaleDateString('zh-CN', { month:'short', day:'numeric' });
-            if (isPoweredOn && autoOffTargetTime) {
-                updateStatusWithTimer();
-            }
+            if (isPoweredOn && autoOffTargetTime) updateStatusWithTimer();
         }
 
         function startProgressUpdater() {
@@ -1102,10 +1117,7 @@
                     return;
                 }
                 const track = playlist[currentTrackIndex];
-                if (!track) {
-                    progressAnimFrameId = requestAnimationFrame(update);
-                    return;
-                }
+                if (!track) { progressAnimFrameId = requestAnimationFrame(update); return; }
                 const elapsedInTrack = (Date.now() - currentTrackStartTime) / 1000;
                 const clamped = Math.max(0, Math.min(elapsedInTrack, track.durationSec));
                 progressBar.style.width = (track.durationSec > 0 ? (clamped / track.durationSec) * 100 : 0) + '%';
@@ -1119,13 +1131,11 @@
         // ==================== 事件绑定 ====================
         btnPower.addEventListener('click', () => isPoweredOn ? powerOff() : powerOn());
         btnCalibrate.addEventListener('click', manualCalibrate);
-
         volumeSlider.addEventListener('input', () => {
             const vol = parseInt(volumeSlider.value);
             volumeValue.textContent = vol + '%';
             audioPlayer.volume = vol / 100;
         });
-
         audioPlayer.addEventListener('error', () => {
             if (!isPoweredOn) return;
             const track = playlist[currentTrackIndex];
@@ -1134,19 +1144,16 @@
                 setTimeout(() => { if (isPoweredOn) switchToNextTrack(); }, 2000);
             }
         });
-
         audioPlayer.addEventListener('canplay', () => {
             if (isPoweredOn && audioPlayer.paused && audioPlayer.src) {
                 audioPlayer.play().catch(() => {});
             }
         });
-
         scheduleToggle.addEventListener('click', () => {
             const isOpen = scheduleWrapper.classList.toggle('open');
             scheduleArrow.classList.toggle('open', isOpen);
             if (isOpen) renderScheduleTable();
         });
-
         document.addEventListener('keydown', (e) => {
             if (e.key === ' ') { e.preventDefault(); btnPower.click(); }
             if (e.key === 'c' || e.key === 'C') { e.preventDefault(); manualCalibrate(); }
@@ -1157,7 +1164,6 @@
                 else { const vol = 75; audioPlayer.volume = vol/100; volumeSlider.value = vol; volumeValue.textContent = vol+'%'; }
             }
         });
-
         window.addEventListener('beforeunload', () => {
             stopPlayback();
             if (preloadAudio) { preloadAudio.src = ''; preloadAudio = null; }
@@ -1169,7 +1175,6 @@
             volumeValue.textContent = volumeSlider.value + '%';
             updateClock();
             setInterval(updateClock, 1000);
-
             if (buildPlaylistFromManual()) {
                 buildSchedule();
                 renderScheduleTable();
@@ -1179,6 +1184,7 @@
         }
         init();
     })();
+    
 </script>
 </body>
 </html>
