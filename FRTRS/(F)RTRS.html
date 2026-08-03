@@ -88,7 +88,6 @@
             padding: 20px;
             box-sizing: border-box;
             width: 100%;
-            position: relative;
         }
 
         .radio-device {
@@ -100,7 +99,7 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3),
                         inset 0 1px 0 rgba(255,255,255,0.03), 0 0 0 1px rgba(34,85,85,0.15);
             position: relative;
-            overflow: visible;
+            overflow: hidden;
             box-sizing: border-box;
         }
 
@@ -365,36 +364,26 @@
         .schedule-arrow { transition: transform 0.3s; display: inline-block; font-size: 0.65rem; }
         .schedule-arrow.open { transform: rotate(180deg); }
 
-        /* 下拉时间表浮层 */
+        /* 时间表 */
         .schedule-table-wrapper {
-            position: absolute;
-            top: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
-            width: 100%;
-            max-width: 580px;
             max-height: 0;
             overflow: hidden;
-            background: #1a2e2e;
-            border-radius: 12px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.6);
-            z-index: 40;
-            transition: max-height 0.4s ease;
+            transition: max-height 0.5s ease, margin 0.3s ease;
+            margin-top: 0;
         }
         .schedule-table-wrapper.open {
-            max-height: 300px;
+            max-height: 400px;
+            margin-top: 10px;
         }
+
         .schedule-table {
             width: 100%; border-collapse: collapse; font-size: 0.73rem;
-            background: transparent;
-            display: block;
-            max-height: 300px;
-            overflow-y: auto;
+            background: rgba(0,0,0,0.2); border-radius: 10px;
+            display: block; max-height: 280px; overflow-y: auto;
         }
         .schedule-table thead { position: sticky; top: 0; z-index: 1; }
         .schedule-table th {
-            background: #0f2a2a;
-            color: var(--accent); font-weight: 500;
+            background: rgba(0,0,0,0.6); color: var(--accent); font-weight: 500;
             padding: 8px 10px; text-align: left; font-size: 0.68rem;
             text-transform: uppercase; white-space: nowrap;
         }
@@ -516,23 +505,21 @@
         <div class="schedule-toggle" id="scheduleToggle">
             📋 时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
         </div>
-    </div>
-
-    <!-- 下拉时间表浮层 -->
-    <div class="schedule-table-wrapper" id="scheduleWrapper">
-        <table class="schedule-table" id="scheduleTable">
-            <thead>
-            <tr>
-                <th class="time-col">开始时间</th>
-                <th class="dur-col">时长</th>
-                <th class="title-col">歌曲</th>
-                <th class="artist-col">艺术家</th>
-            </tr>
-            </thead>
-            <tbody id="scheduleTbody">
-            <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
-            </tbody>
-        </table>
+        <div class="schedule-table-wrapper" id="scheduleWrapper">
+            <table class="schedule-table" id="scheduleTable">
+                <thead>
+                <tr>
+                    <th class="time-col">开始时间</th>
+                    <th class="dur-col">时长</th>
+                    <th class="title-col">歌曲</th>
+                    <th class="artist-col">艺术家</th>
+                </tr>
+                </thead>
+                <tbody id="scheduleTbody">
+                <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
 
@@ -544,7 +531,7 @@
     (function() {
         // ==================== 配置区 ====================
         const MUSIC_PATH_PREFIX = 'music/';
-        const RADIO_START = new Date(2026, 8, 2, 6, 0, 3); 
+        const RADIO_START = new Date(2026, 8, 3, 6, 0, 3); 
 
         // ★ 播放列表 ★
         const manualPlaylist = [
@@ -945,10 +932,7 @@
         }
 
         function manualCalibrate() {
-            if (!isPoweredOn) {
-                showToast('请先打开收音机', true);
-                return;
-            }
+            if (!isPoweredOn) { showToast('请先打开收音机', true); return; }
             const now = Date.now();
             const pos = getPositionForTimestamp(now);
             if (pos.pastEnd) { showToast('⏹ 节目已结束', true); return; }
