@@ -813,7 +813,11 @@
             }
             if (!track.lyrics || track.lyrics.length === 0) {
                 lyricsDefault.style.display = 'block';
-                lyricsDefault.textContent = '歌词功能即将上线，敬请期待';
+                if (isPoweredOn) {
+                    lyricsDefault.textContent = '歌词功能施工ing...';
+                } else {
+                    lyricsDefault.textContent = '我是示词器:）';
+                }
                 lyricsContent.classList.remove('show');
                 return;
             }
