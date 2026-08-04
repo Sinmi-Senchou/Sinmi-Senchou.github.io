@@ -102,6 +102,7 @@
             position: relative;
             overflow: visible;
             box-sizing: border-box;
+            z-index:45
         }
 
         .radio-device::before {
@@ -368,14 +369,14 @@
         /* 下拉时间表浮层 */
         .schedule-table-wrapper {
             position: absolute;
-            top: 100%;
-            left: 28px;          /* 与播放器内边距对齐 */
-            right: 28px;
+            top: 80%;
+            left: 25px;
+            right: 25px;
             width: auto;
             max-height: 0;
             overflow: hidden;
             background: #1a2e2e;
-            border-radius: 0 0 12px 12px;   /* 无上圆角，与底部衔接 */
+            border-radius: 0 0 12px 12px;
             box-shadow: 0 8px 20px rgba(0,0,0,0.5);
             z-index: 40;
             transition: max-height 0.4s ease;
