@@ -792,40 +792,32 @@
         }
 
         function updateLyricsDisplay() {
-            if (!isPoweredOn || currentTrackIndex < 0 || currentTrackIndex >= playlist.length) {
-                // 未播放或关机状态 -> 显示默认
+            if (!isPoweredOn) {
                 lyricsDefault.style.display = 'block';
-                lyricsDefault.textContent = '（我是示词器）';
+                lyricsDefault.textContent = '我是示词器:）';
                 lyricsContent.classList.remove('show');
                 return;
             }
-
+            if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) {
+                lyricsDefault.style.display = 'block';
+                lyricsDefault.textContent = '没找到歌啊(´･_･`)';
+                lyricsContent.classList.remove('show');
+                return;
+            }
             const track = playlist[currentTrackIndex];
-            // 如果歌词尚未加载完成（loading 状态），显示加载提示
             if (track._lyricsLoaded === 'loading') {
                 lyricsDefault.style.display = 'block';
-                lyricsDefault.textContent = ' 加载歌词中...';
+                lyricsDefault.textContent = '加载歌词中...';
                 lyricsContent.classList.remove('show');
                 return;
             }
-
-            // 已加载完成但没有歌词数据
             if (!track.lyrics || track.lyrics.length === 0) {
                 lyricsDefault.style.display = 'block';
                 lyricsDefault.textContent = '纯音乐，请欣赏';
                 lyricsContent.classList.remove('show');
                 return;
             }
-
-            const currentTime = audioPlayer.currentTime;
-            let activeLine = null;
-            // 从后往前查找最后一个 time <= currentTime 的行
-            for (let i = track.lyrics.length - 1; i >= 0; i--) {
-                if (track.lyrics[i].time <= currentTime) {
-                    activeLine = track.lyrics[i];
-                    break;
-                }
-            }
+        }
 
             if (activeLine) {
                 // 有匹配的歌词行，显示两行
