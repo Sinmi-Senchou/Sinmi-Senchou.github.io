@@ -372,7 +372,6 @@
             top: 78%;
             left: 70px;
             right: 70px;
-            width: auto;
             max-height: 0;
             overflow: hidden;
             background: #1a2e2e;
@@ -385,11 +384,13 @@
             max-height: 300px;
         }
         .schedule-table {
-            width: 100%; border-collapse: collapse; font-size: 0.73rem;
-            background: transparent;
-            display: block;
-            max-height: 300px;
-            overflow-y: auto;
+			width: 100%;
+			table-layout: fixed;
+			border-collapse: collapse;
+			font-size: 0.73rem;
+			background: transparent;
+			max-height: 300px;
+			overflow-y: auto;
         }
         .schedule-table thead { position: sticky; top: 0; z-index: 1; }
         .schedule-table th {
