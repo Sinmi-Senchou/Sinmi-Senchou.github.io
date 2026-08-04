@@ -369,7 +369,7 @@
         /* 下拉时间表浮层 */
         .schedule-table-wrapper {
             position: absolute;
-            top: 77%;
+            top: 78%;
             left: 70px;
             right: 70px;
             max-height: 0;
@@ -389,8 +389,6 @@
 			border-collapse: collapse;
 			font-size: 0.73rem;
 			background: transparent;
-			max-height: 300px;
-			overflow-y: auto;
         }
         .schedule-table thead { position: sticky; top: 0; z-index: 1; }
         .schedule-table th {
@@ -446,7 +444,7 @@
                 padding: 10px;
             }
             .timer-option { font-size: 0.8rem; padding: 6px 10px; }
-            .schedule-table-wrapper { top: 80%; left: 23px; right: 23px; }
+            .schedule-table-wrapper { top: 80%; left: 25px; right: 25px; }
         }
     </style>
 </head>
@@ -463,7 +461,7 @@
         </div>
 
         <div class="frequency-display">
-            <div class="freq-label">F R A Q U A N C Y</div>
+            <div class="freq-label">F R E Q U E N C Y</div>
             <div class="freq-number">
                 60<span style="font-size:0.7em;">.</span>3 <span class="freq-unit">MHz</span>
             </div>
@@ -516,7 +514,7 @@
         </div>
 
         <div class="schedule-toggle" id="scheduleToggle">
-            📋 时间表 <span class="schedule-arrow" id="scheduleArrow">▼</span>
+            📋 即将播放 <span class="schedule-arrow" id="scheduleArrow">▼</span>
         </div>
     </div>
 
@@ -1058,8 +1056,13 @@
                 }
             }
             rows.sort((a, b) => a.startMs - b.startMs);
+            const MAX_FUTURE_SONGS = 10;
+            if (rows.length > MAX_FUTURE_SONGS) {
+                rows = rows.slice(0, MAX_FUTURE_SONGS);
+            }
+
             if (rows.length === 0) {
-                scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">未来2小时无节目</td></tr>';
+                scheduleTbody.innerHTML = '<tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">暂无即将播放的曲目</td></tr>';
             } else {
                 let html = '';
                 rows.forEach(row => {
