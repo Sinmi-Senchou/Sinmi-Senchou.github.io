@@ -813,13 +813,18 @@
             }
             if (!track.lyrics || track.lyrics.length === 0) {
                 lyricsDefault.style.display = 'block';
-                if (isPoweredOn) {
-                    lyricsDefault.textContent = '歌词功能施工ing...';
-                } else {
-                    lyricsDefault.textContent = '我是示词器:）';
-                }
+                lyricsDefault.textContent = '歌词功能施工ing...';
                 lyricsContent.classList.remove('show');
                 return;
+            }
+
+            const currentTime = audioPlayer.currentTime;
+            let activeLine = null;
+            for (let i = track.lyrics.length - 1; i >= 0; i--) {
+                if (track.lyrics[i].time <= currentTime) {
+                    activeLine = track.lyrics[i];
+                    break;
+                }
             }
 
             if (activeLine) {
@@ -1093,6 +1098,8 @@
             progressCurrent.textContent = '00:00';
             progressTotal.textContent = '00:00';
             updateScheduleTableHighlight();
+            // 统一刷新歌词显示（根据当前 isPoweredOn 状态）
+            updateLyricsDisplay();
         }
 
         function manualCalibrate() {
