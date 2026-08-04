@@ -813,7 +813,7 @@
             }
             if (!track.lyrics || track.lyrics.length === 0) {
                 lyricsDefault.style.display = 'block';
-                lyricsDefault.textContent = '纯音乐，请欣赏';
+                lyricsDefault.textContent = '歌词功能即将上线，敬请期待';
                 lyricsContent.classList.remove('show');
                 return;
             }
@@ -1089,10 +1089,6 @@
             progressCurrent.textContent = '00:00';
             progressTotal.textContent = '00:00';
             updateScheduleTableHighlight();
-            // 关闭时重置歌词显示
-            lyricsDefault.style.display = 'block';
-            lyricsDefault.textContent = '纯音乐，请欣赏';
-            lyricsContent.classList.remove('show');
         }
 
         function manualCalibrate() {
