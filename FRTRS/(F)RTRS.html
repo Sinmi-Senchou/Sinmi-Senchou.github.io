@@ -217,7 +217,6 @@
             border-color: rgba(42,161,152,0.25);
         }
 
-        /* 收集表链接 */
         .survey-link {
             font-size: 0.7rem;
             color: var(--text-secondary);
@@ -256,7 +255,6 @@
             -webkit-text-fill-color: var(--text-secondary);
         }
 
-        /* 歌曲信息区 */
         .now-playing-section {
             background: rgba(0,0,0,0.25); border-radius: 16px; padding: 18px 20px;
             margin-bottom: 14px; border: 1px solid var(--border);
@@ -290,7 +288,6 @@
             font-size: 0.95rem; opacity: 0.7;
         }
 
-        /* ===== 歌词显示栏 ===== */
         .lyrics-section {
             background: rgba(0,0,0,0.25);
             border-radius: 16px;
@@ -356,7 +353,7 @@
 
         .up-next {
             background: rgba(0,0,0,0.15); border-radius: 10px; padding: 10px 14px;
-            margin-bottom: 14px; font-size: 0.8rem; color: var(--text-secondary);
+            margin-bottom: 8px; font-size: 0.8rem; color: var(--text-secondary);
             display: flex; align-items: center; gap: 8px; border: 1px solid transparent;
         }
         .up-next-icon { font-size: 1rem; }
@@ -364,6 +361,18 @@
         .up-next-time {
             font-family: var(--font-mono); font-size: 0.73rem;
             color: var(--accent); white-space: nowrap;
+        }
+
+        /* 收听时长统计 */
+        .listen-stats {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            padding: 0 4px;
+            opacity: 0.8;
+            line-height: 1.5;
+            word-break: break-word;
         }
 
         .controls-row {
@@ -398,7 +407,6 @@
         }
         .btn-calibrate:active, .btn-timer:active { transform: scale(0.95); }
 
-        /* 定时弹出菜单 */
         .timer-popup {
             display: none;
             position: absolute;
@@ -491,7 +499,6 @@
         .schedule-arrow { transition: transform 0.3s; display: inline-block; font-size: 0.65rem; }
         .schedule-arrow.open { transform: rotate(180deg); }
 
-        /* 下拉时间表浮层 */
         .schedule-table-wrapper {
             position: absolute;
             top: 78%;
@@ -574,7 +581,6 @@
             }
             .timer-option { font-size: 0.8rem; padding: 6px 10px; }
             .schedule-table-wrapper { top: 80%; left: 25px; right: 25px; }
-            /* 左侧按钮移动端适配 */
             .mode-switcher {
                 position: absolute;
                 left: -56px;
@@ -587,6 +593,7 @@
                 height: 40px;
                 font-size: 0.6rem;
             }
+            .listen-stats { font-size: 0.65rem; }
         }
     </style>
 </head>
@@ -594,7 +601,6 @@
 
 <div class="radio-wrapper">
     <div class="radio-device" id="radioDevice">
-        <!-- 左侧歌单切换按钮 -->
         <div class="mode-switcher">
             <button class="mode-btn active" id="modeTable" title="表歌单（村纱同人曲）">表</button>
             <button class="mode-btn" id="modeInner" title="里歌单（印象曲）">里</button>
@@ -625,7 +631,6 @@
             <div class="song-artist" id="songArtist"></div>
         </div>
 
-        <!-- ===== 歌词显示栏 ===== -->
         <div class="lyrics-section" id="lyricsSection">
             <div class="lyrics-default" id="lyricsDefault">歌词功能即将上线，敬请期待</div>
             <div class="lyrics-content" id="lyricsContent">
@@ -650,6 +655,9 @@
             <span class="up-next-time" id="upNextTime"></span>
         </div>
 
+        <!-- 收听时长统计 -->
+        <div class="listen-stats" id="listenStats">累计收听 0小时0分钟 · 本次 0小时0分钟</div>
+
         <div class="controls-row">
             <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
             <button class="btn-calibrate" id="btnCalibrate" title="手动校准到当前时间">⏱</button>
@@ -661,7 +669,6 @@
             </div>
         </div>
 
-        <!-- 定时关闭弹出菜单 -->
         <div class="timer-popup" id="timerPopup">
             <button class="timer-option" data-minutes="15">15 分钟后关闭</button>
             <button class="timer-option" data-minutes="30">30 分钟后关闭</button>
@@ -679,7 +686,6 @@
         </div>
     </div>
 
-    <!-- 下拉时间表浮层 -->
     <div class="schedule-table-wrapper" id="scheduleWrapper">
         <table class="schedule-table" id="scheduleTable">
             <thead>
@@ -709,7 +715,6 @@
         const LYRICS_PATH_PREFIX = 'lyrics/';
         const RADIO_START = new Date(2026, 5, 2, 6, 0, 3); 
 
-        // ★ 完整播放列表（0=表，1=里） ★
         const fullPlaylistData = [
             ['7co - Late summer waves.mp3', '02:35', 'Late summer waves', '7co', 1],
 ['松枝賀子,江口貴勅 - 久遠 ~光と波の記憶~（Arrange Version）.mp3', '02:33', '久遠 ~光と波の記憶~（Arrange Version）', '松枝賀子; 江口貴勅', 1],
@@ -807,16 +812,16 @@
         const customTimerInput = document.getElementById('customTimerInput');
         const customTimerBtn = document.getElementById('customTimerBtn');
 
-        // 歌词相关 DOM
         const lyricsDefault = document.getElementById('lyricsDefault');
         const lyricsContent = document.getElementById('lyricsContent');
         const lyricsOriginal = document.getElementById('lyricsOriginal');
         const lyricsTranslated = document.getElementById('lyricsTranslated');
 
-        // 歌单切换按钮
         const modeTableBtn = document.getElementById('modeTable');
         const modeInnerBtn = document.getElementById('modeInner');
         const modeMixedBtn = document.getElementById('modeMixed');
+
+        const listenStats = document.getElementById('listenStats');
 
         // ==================== 状态变量 ====================
         let allTracks = [];
@@ -834,7 +839,12 @@
         let consecutiveSwitchCount = 0;
         let autoOffTimeoutId = null;
         let autoOffTargetTime = null;
-        let currentMode = 'table';   // 'table' | 'inner' | 'mixed'
+        let currentMode = 'table';
+
+        // ==================== 收听时长相关 ====================
+        let totalListenSeconds = 0;
+        let sessionListenSeconds = 0;
+        let listenTimerId = null;
 
         // ==================== 主题切换 ====================
         const themeMap = {
@@ -916,6 +926,50 @@
             }, 3500);
         }
 
+        // ==================== 收听时长管理 ====================
+        function formatDuration(seconds) {
+            const h = Math.floor(seconds / 3600);
+            const m = Math.floor((seconds % 3600) / 60);
+            return `${h}小时${m}分钟`;
+        }
+
+        function updateListenDisplay() {
+            const totalStr = formatDuration(totalListenSeconds);
+            const sessionStr = formatDuration(sessionListenSeconds);
+            listenStats.textContent = `累计收听 ${totalStr} · 本次 ${sessionStr}`;
+        }
+
+        function saveTotalListen() {
+            localStorage.setItem('totalListenSeconds', String(totalListenSeconds));
+        }
+
+        function loadTotalListen() {
+            const stored = localStorage.getItem('totalListenSeconds');
+            totalListenSeconds = stored ? parseInt(stored, 10) : 0;
+            if (isNaN(totalListenSeconds)) totalListenSeconds = 0;
+        }
+
+        function startListenTimer() {
+            if (listenTimerId) return;
+            listenTimerId = setInterval(() => {
+                sessionListenSeconds++;
+                totalListenSeconds++;
+                updateListenDisplay();
+            }, 1000);
+        }
+
+        function stopListenTimer() {
+            if (listenTimerId) {
+                clearInterval(listenTimerId);
+                listenTimerId = null;
+            }
+            if (sessionListenSeconds > 0) {
+                saveTotalListen();
+                sessionListenSeconds = 0;
+                updateListenDisplay();
+            }
+        }
+
         // ==================== 歌单构建与切换 ====================
         function buildAllTracks() {
             allTracks = fullPlaylistData.map(row => {
@@ -923,7 +977,7 @@
                 const durationSec = parseDuration(row[1]);
                 const title = row[2] || filename.replace(/\.[^.]+$/, '');
                 const artist = row[3] || '未知艺术家';
-                const type = row[4] || 0; // 0=表，1=里
+                const type = row[4] || 0;
                 return { filename, durationSec, title, artist, type, lyrics: [], _lyricsLoaded: false };
             }).filter(t => t.filename && t.durationSec > 0);
             if (allTracks.length === 0) {
@@ -936,7 +990,7 @@
         function getFilteredPlaylist(mode) {
             if (mode === 'table') return allTracks.filter(t => t.type === 0);
             else if (mode === 'inner') return allTracks.filter(t => t.type === 1);
-            else return allTracks.slice(); // mixed
+            else return allTracks.slice();
         }
 
         function buildScheduleForPlaylist(playlist) {
@@ -994,6 +1048,24 @@
             };
         }
 
+        // ==================== 预加载 ====================
+        function preloadNextTrackImmediately() {
+            const nextIndex = getNextTrackIndex();
+            if (nextIndex < 0 || nextIndex >= playlist.length) return;
+            const nextTrack = playlist[nextIndex];
+            const folder = nextTrack.type === 1 ? INNER_MUSIC_PATH_PREFIX : MUSIC_PATH_PREFIX;
+            const nextSrc = folder + nextTrack.filename;
+            if (!preloadAudio) {
+                preloadAudio = new Audio();
+                preloadAudio.preload = 'auto';
+                preloadAudio.volume = 0;
+            }
+            if (preloadAudio.src !== nextSrc) {
+                preloadAudio.src = nextSrc;
+                preloadAudio.load();
+            }
+        }
+
         // ==================== 播放控制 ====================
         function playTrackAtIndex(trackIndex, offsetSec, actualStartMs, actualEndMs) {
             if (trackIndex < 0 || trackIndex >= playlist.length) return false;
@@ -1017,6 +1089,7 @@
             loadLyricsForTrack(track);
             updateLyricsDisplay();
             scheduleNextTrackSwitch();
+            preloadNextTrackImmediately();
             return true;
         }
 
@@ -1074,7 +1147,6 @@
                 showToast(`⚠️ ${mode === 'table' ? '表' : mode === 'inner' ? '里' : '混播'}歌单为空`, true);
                 return;
             }
-            // 重建时间表
             buildScheduleForPlaylist(playlist);
             if (isPoweredOn) {
                 const now = Date.now();
@@ -1260,6 +1332,7 @@
             playTrackAtIndex(pos.trackIndex, pos.offsetSec, pos.actualStartMs, pos.actualEndMs);
             startProgressUpdater();
             startScheduleRefresher();
+            startListenTimer();
         }
 
         function powerOff() {
@@ -1282,6 +1355,7 @@
             upNextTime.textContent = '';
             updateScheduleTableHighlight();
             updateLyricsDisplay();
+            stopListenTimer();
         }
 
         // ==================== 其他UI更新函数 ====================
@@ -1464,7 +1538,6 @@
         btnPower.addEventListener('click', () => isPoweredOn ? powerOff() : powerOn());
         btnCalibrate.addEventListener('click', manualCalibrate);
 
-        // 歌单切换按钮
         modeTableBtn.addEventListener('click', () => { if (currentMode !== 'table') switchMode('table'); });
         modeInnerBtn.addEventListener('click', () => { if (currentMode !== 'inner') switchMode('inner'); });
         modeMixedBtn.addEventListener('click', () => { if (currentMode !== 'mixed') switchMode('mixed'); });
@@ -1503,11 +1576,13 @@
             }
         });
         window.addEventListener('beforeunload', () => {
+            if (isPoweredOn) {
+                stopListenTimer();
+            }
             stopPlayback();
             if (preloadAudio) { preloadAudio.src = ''; preloadAudio = null; }
         });
 
-        // 自定义定时器
         customTimerBtn.addEventListener('click', () => {
             const val = parseInt(customTimerInput.value);
             if (isNaN(val) || val < 1 || val > 1440) {
@@ -1548,6 +1623,12 @@
             currentMode = 'table';
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
             volumeValue.textContent = volumeSlider.value + '%';
+            
+            // 读取累计收听时长
+            loadTotalListen();
+            sessionListenSeconds = 0;
+            updateListenDisplay();
+
             updateClock();
             setInterval(updateClock, 1000);
             renderScheduleTable();
