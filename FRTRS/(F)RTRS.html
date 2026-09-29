@@ -47,7 +47,633 @@
       
       
       
-        <script>
+        <!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📻 （仿）实时电台 - 村纱曲播放器</title>
+    <style>
+        :root {
+            --bg: #0f1a1a;
+            --panel-bg: #132626;
+            --accent: #2aa198;
+            --accent-glow: #4db8a8;
+            --accent-dim: #1f5c5c;
+            --text: #d0e0df;
+            --text-secondary: #8ba8a6;
+            --border: #1f3a3a;
+            --progress-bg: #1c2e2e;
+            --danger: #c0392b;
+            --success: #27ae60;
+            --font-mono: 'SF Mono', 'Cascadia Code', 'Consolas', 'Monaco', 'Menlo', monospace;
+            --font-sans: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+            --theme-primary: #225555;
+            --theme-secondary: #1a4040;
+            --theme-accent: #2aa198;
+            --theme-border: #1f3a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            margin: 0; padding: 0;
+            background: var(--bg);
+            font-family: var(--font-sans);
+            color: var(--text);
+        }
+
+        .radio-wrapper {
+            background: radial-gradient(ellipse at center, var(--panel-bg) 0%, transparent 70%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            box-sizing: border-box;
+            width: 100%;
+            position: relative;
+        }
+
+        .radio-device {
+            background: var(--panel-bg);
+            border-radius: 28px;
+            padding: 30px 28px 24px;
+            width: 100%;
+            max-width: 580px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5), 0 4px 16px rgba(0,0,0,0.3),
+                        inset 0 1px 0 rgba(255,255,255,0.03), 0 0 0 1px rgba(34,85,85,0.15);
+            position: relative;
+            overflow: visible;
+            box-sizing: border-box;
+            z-index:45;
+            transition: border-color 0.5s ease, box-shadow 0.5s ease;
+            border: 1px solid var(--theme-border);
+        }
+
+        .radio-device::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 20px; right: 20px;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, var(--theme-accent), transparent);
+            border-radius: 2px;
+            transition: background 0.5s ease;
+        }
+
+        .mode-switcher {
+            position: absolute;
+            left: -70px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 60;
+        }
+        .mode-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+            padding: 0;
+            line-height: 1;
+        }
+        .mode-btn.active {
+            transform: scale(1.15);
+            border-color: #fff;
+            box-shadow: 0 0 20px rgba(255,255,255,0.3);
+        }
+        .mode-btn#modeTable { background: #225555; }
+        .mode-btn#modeTable.active { background: #2a7a7a; }
+        .mode-btn#modeInner { background: #283264; }
+        .mode-btn#modeInner.active { background: #3a4a8a; }
+        .mode-btn#modeMixed { background: #25445D; }
+        .mode-btn#modeMixed.active { background: #3a6a8a; }
+        .mode-btn:hover {
+            transform: scale(1.1);
+            filter: brightness(1.2);
+        }
+
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 18px; padding: 0 4px;
+        }
+
+        .live-clock {
+            font-family: var(--font-mono); font-size: 1.05rem;
+            color: var(--text-secondary); letter-spacing: 0.5px;
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        .live-dot {
+            width: 8px; height: 8px; border-radius: 50%;
+            background: var(--success);
+            animation: livePulse 2s ease-in-out infinite;
+            box-shadow: 0 0 8px rgba(39,174,96,0.6);
+        }
+
+        @keyframes livePulse {
+            0%,100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.35; transform: scale(0.7); }
+        }
+
+        .status-badge {
+            font-size: 0.78rem; padding: 5px 12px; border-radius: 20px;
+            background: rgba(39,174,96,0.12); color: #5dde8e;
+            letter-spacing: 0.4px; font-weight: 500;
+            border: 1px solid rgba(39,174,96,0.2); white-space: nowrap;
+        }
+        .status-badge.offline {
+            background: rgba(192,57,43,0.12); color: #e74c3c;
+            border-color: rgba(192,57,43,0.2);
+        }
+        .status-badge.waiting {
+            background: rgba(42,161,152,0.12); color: #2aa198;
+            border-color: rgba(42,161,152,0.25);
+        }
+
+        .survey-link {
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            border: 1px solid var(--text-secondary);
+            border-radius: 12px;
+            padding: 4px 10px;
+            transition: all 0.3s;
+            opacity: 0.7;
+            white-space: nowrap;
+        }
+        .survey-link:hover {
+            opacity: 1;
+            color: var(--accent);
+            border-color: var(--accent);
+        }
+
+        .frequency-display { text-align: center; margin-bottom: 10px; }
+        .freq-label {
+            font-size: 0.7rem; text-transform: uppercase; letter-spacing: 3px;
+            color: var(--text-secondary); margin-bottom: 2px;
+        }
+        .freq-number {
+            font-family: var(--font-mono); font-size: 3.2rem; font-weight: 700;
+            letter-spacing: 2px;
+            background: linear-gradient(180deg, #8fd0c0 0%, var(--accent) 40%, var(--theme-primary) 80%);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            filter: drop-shadow(0 0 12px rgba(42,161,152,0.4));
+            line-height: 1.1;
+            transition: background 0.5s ease;
+        }
+        .freq-unit {
+            font-size: 0.9rem; letter-spacing: 1px;
+            color: var(--text-secondary);
+            -webkit-text-fill-color: var(--text-secondary);
+        }
+
+        .now-playing-section {
+            background: rgba(0,0,0,0.25); border-radius: 16px; padding: 18px 20px;
+            margin-bottom: 14px; border: 1px solid var(--border);
+            text-align: center;
+            height: 90px;
+            display: flex; flex-direction: column; justify-content: center;
+            overflow: hidden;
+        }
+        .song-title {
+            font-size: 1.3rem; font-weight: 600; color: #e0f0ef;
+            line-height: 1.3;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            word-break: break-word;
+        }
+        .song-artist {
+            font-size: 0.9rem; color: var(--text-secondary);
+            margin-top: 2px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .song-index {
+            font-size: 0.7rem; color: var(--accent); letter-spacing: 1px;
+            text-transform: uppercase; margin-bottom: 2px; opacity: 0.8;
+        }
+        .no-song {
+            color: var(--text-secondary); font-style: italic;
+            font-size: 0.95rem; opacity: 0.7;
+        }
+
+        .lyrics-section {
+            background: rgba(0,0,0,0.25);
+            border-radius: 16px;
+            padding: 6px 20px;
+            margin-bottom: 10px;
+            border: 1px solid var(--border);
+            height: 56px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            overflow: hidden;
+            transition: height 0.2s ease;
+        }
+        .lyrics-default {
+            color: var(--text-secondary);
+            font-style: italic;
+            font-size: 0.9rem;
+            opacity: 0.7;
+        }
+        .lyrics-content {
+            display: none;
+            flex-direction: column;
+            width: 100%;
+            gap: 1px;
+        }
+        .lyrics-content.show {
+            display: flex;
+        }
+        .lyrics-original {
+            font-size: 0.85rem;
+            color: #e0f0ef;
+            line-height: 1.3;
+        }
+        .lyrics-translated {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+            line-height: 1.3;
+        }
+
+        .progress-container { margin-bottom: 10px; padding: 0 4px; }
+        .progress-time-row {
+            display: flex; justify-content: space-between;
+            font-family: var(--font-mono); font-size: 0.75rem;
+            color: var(--text-secondary); margin-bottom: 5px;
+        }
+        .progress-bar-outer {
+            height: 6px; background: var(--progress-bg);
+            border-radius: 3px; overflow: hidden;
+        }
+        .progress-bar-inner {
+            height: 100%;
+            background: linear-gradient(90deg, var(--theme-primary), var(--accent), var(--accent-glow));
+            border-radius: 3px; transition: width 0.9s linear, background 0.5s ease;
+            position: relative;
+        }
+        .progress-bar-inner::after {
+            content: ''; position: absolute; right: 0; top: 50%;
+            transform: translateY(-50%); width: 12px; height: 12px;
+            border-radius: 50%; background: #5ec4b4;
+            box-shadow: 0 0 10px rgba(42,161,152,0.7); opacity: 0.9;
+        }
+
+        .up-next {
+            background: rgba(0,0,0,0.15); border-radius: 10px; padding: 10px 14px;
+            margin-bottom: 8px; font-size: 0.8rem; color: var(--text-secondary);
+            display: flex; align-items: center; gap: 8px; border: 1px solid transparent;
+        }
+        .up-next-icon { font-size: 1rem; }
+        .up-next-info { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .up-next-time {
+            font-family: var(--font-mono); font-size: 0.73rem;
+            color: var(--accent); white-space: nowrap;
+        }
+
+        .listen-stats {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+            padding: 0 4px;
+            opacity: 0.8;
+            line-height: 1.5;
+            word-break: break-word;
+        }
+
+        .controls-row {
+            display: flex; align-items: center; justify-content: center;
+            gap: 12px; margin-bottom: 12px; flex-wrap: wrap;
+        }
+        .btn-power, .btn-calibrate, .btn-timer {
+            width: 56px; height: 56px; border-radius: 50%;
+            border: 2px solid rgba(255,255,255,0.15);
+            background: rgba(0,0,0,0.4); color: #fff; font-size: 1.2rem;
+            cursor: pointer; transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+            flex-shrink: 0;
+        }
+        .btn-power { font-size: 1.5rem; }
+        .btn-calibrate { font-size: 1.3rem; }
+        .btn-timer { font-size: 1.3rem; }
+        .btn-power:hover, .btn-calibrate:hover, .btn-timer:hover {
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(42,161,152,0.35);
+            transform: scale(1.04);
+        }
+        .btn-power.on {
+            border-color: var(--accent);
+            box-shadow: 0 0 18px rgba(42,161,152,0.5);
+            background: rgba(42,161,152,0.12);
+        }
+        .btn-timer.active {
+            border-color: #e8a850;
+            box-shadow: 0 0 18px rgba(232,168,80,0.5);
+            background: rgba(232,168,80,0.15);
+        }
+        .btn-calibrate:active, .btn-timer:active { transform: scale(0.95); }
+
+        .timer-popup {
+            display: none;
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #1a2e2e;
+            border: 1px solid var(--accent);
+            border-radius: 12px;
+            padding: 12px;
+            z-index: 50;
+            flex-direction: column;
+            gap: 8px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            min-width: 200px;
+        }
+        .timer-popup.show { display: flex; }
+        .timer-option {
+            background: rgba(255,255,255,0.05);
+            border: none;
+            color: var(--text);
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: background 0.2s;
+        }
+        .timer-option:hover { background: rgba(42,161,152,0.2); }
+        .timer-cancel { color: #e74c3c; font-weight: 600; }
+        .custom-timer-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+        }
+        .custom-timer-input {
+            flex: 1;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 8px;
+            color: var(--text);
+            font-size: 0.9rem;
+            outline: none;
+            width: 60px;
+        }
+        .custom-timer-btn {
+            padding: 6px 12px;
+            background: var(--accent);
+            border: none;
+            border-radius: 6px;
+            color: #000;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .volume-slider-container { display: flex; align-items: center; gap: 8px; }
+        .volume-icon { font-size: 1.2rem; color: var(--text-secondary); }
+        .volume-slider {
+            -webkit-appearance: none; appearance: none;
+            width: 80px; height: 5px; border-radius: 3px;
+            background: var(--progress-bg); outline: none; cursor: pointer;
+        }
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none;
+            width: 20px; height: 20px; border-radius: 50%;
+            background: #2aa198; cursor: pointer;
+            border: 2px solid #fff; box-shadow: 0 0 8px rgba(42,161,152,0.6);
+        }
+        .volume-value {
+            font-family: var(--font-mono); font-size: 0.7rem;
+            color: var(--text-secondary); width: 28px; text-align: center;
+        }
+
+        .schedule-toggle {
+            display: flex; align-items: center; justify-content: center;
+            gap: 6px; font-size: 0.78rem; color: var(--text-secondary);
+            cursor: pointer; padding: 8px; opacity: 0.7; transition: opacity 0.2s;
+        }
+        .schedule-toggle:hover { opacity: 1; color: var(--accent); }
+        .schedule-arrow { transition: transform 0.3s; display: inline-block; font-size: 0.65rem; }
+        .schedule-arrow.open { transform: rotate(180deg); }
+
+        .schedule-table-wrapper {
+            position: absolute;
+            top: 78%;
+            left: 70px;
+            right: 70px;
+            max-height: 0;
+            overflow: hidden;
+            background: #1a2e2e;
+            border-radius: 0 0 12px 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.5);
+            z-index: 40;
+            transition: max-height 0.4s ease;
+        }
+        .schedule-table-wrapper.open { max-height: 300px; }
+        .schedule-table {
+            width: 100%;
+            table-layout: fixed;
+            border-collapse: collapse;
+            font-size: 0.73rem;
+            background: transparent;
+        }
+        .schedule-table thead { position: sticky; top: 0; z-index: 1; }
+        .schedule-table th {
+            background: #0f2a2a;
+            color: var(--accent); font-weight: 500;
+            padding: 8px 10px; text-align: left; font-size: 0.68rem;
+            text-transform: uppercase; white-space: nowrap;
+        }
+        .schedule-table td {
+            padding: 7px 10px; border-bottom: 1px solid rgba(255,255,255,0.04);
+            white-space: nowrap;
+        }
+        .schedule-table tr.now-playing-row {
+            background: rgba(42,161,152,0.12); font-weight: 600; color: #c0f0e8;
+        }
+        .schedule-table .time-col { font-family: var(--font-mono); color: var(--accent); width: 70px; }
+        .schedule-table .dur-col { font-family: var(--font-mono); color: var(--text-secondary); width: 55px; text-align: center; }
+        .schedule-table .title-col { max-width: 160px; overflow: hidden; text-overflow: ellipsis; }
+        .schedule-table .artist-col { color: var(--text-secondary); max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+
+        .message-toast {
+            position: fixed; top: 20px; left: 50%; transform: translateX(-50%);
+            background: #1c2e2e; color: #2aa198; padding: 10px 20px;
+            border-radius: 20px; font-size: 0.85rem; z-index: 100;
+            border: 1px solid rgba(42,161,152,0.3);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+            animation: slideDown 0.4s; max-width: 90vw; text-align: center;
+        }
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateX(-50%) translateY(-30px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        .message-toast.error {
+            background: #2b1e1e; color: #e74c3c;
+            border-color: rgba(231,76,60,0.4);
+        }
+
+        @media (max-width: 480px) {
+            .radio-wrapper { padding: 10px; }
+            .radio-device { padding: 20px 14px 16px; border-radius: 20px; }
+            .freq-number { font-size: 2.4rem; }
+            .song-title { font-size: 1.1rem; }
+            .now-playing-section { padding: 12px 10px; height: 70px; }
+            .lyrics-section { height: 48px; padding: 4px 12px; }
+            .lyrics-default { font-size: 0.8rem; }
+            .lyrics-original { font-size: 0.75rem; }
+            .lyrics-translated { font-size: 0.7rem; }
+            .btn-power, .btn-calibrate, .btn-timer { width: 48px; height: 48px; font-size: 1.2rem; }
+            .btn-calibrate, .btn-timer { font-size: 1rem; }
+            .volume-slider { width: 55px; }
+            .schedule-table { font-size: 0.68rem; }
+            .schedule-table th, .schedule-table td { padding: 5px 6px; }
+            .timer-popup { bottom: 70px; min-width: 180px; padding: 10px; }
+            .timer-option { font-size: 0.8rem; padding: 6px 10px; }
+            .schedule-table-wrapper { top: 80%; left: 25px; right: 25px; }
+            .mode-switcher {
+                position: absolute;
+                left: -56px;
+                top: 50%;
+                transform: translateY(-50%);
+                gap: 8px;
+            }
+            .mode-btn { width: 40px; height: 40px; font-size: 0.6rem; }
+            .listen-stats { font-size: 0.65rem; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="radio-wrapper">
+    <div class="radio-device" id="radioDevice">
+        <div class="mode-switcher">
+            <button class="mode-btn active" id="modeTable" title="表歌单（村纱同人曲）">表</button>
+            <button class="mode-btn" id="modeInner" title="里歌单（印象曲）">里</button>
+            <button class="mode-btn" id="modeMixed" title="混播歌单">混</button>
+        </div>
+
+        <div class="top-bar">
+            <div class="live-clock" id="liveClock">
+                <span class="live-dot" id="liveDot"></span>
+                <span id="clockTime">--:--:--</span>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+                <a class="survey-link" href="https://www.wenjuan.com/s/a2quIn0/" target="_blank">📋 反馈</a>
+                <div class="status-badge offline" id="statusBadge">🔴 已关机</div>
+            </div>
+        </div>
+
+        <div class="frequency-display">
+            <div class="freq-label">F R A Q U A N C Y</div>
+            <div class="freq-number">
+                60<span style="font-size:0.7em;">.</span>3 <span class="freq-unit">MHz</span>
+            </div>
+        </div>
+
+        <div class="now-playing-section" id="nowPlayingSection">
+            <div class="song-index" id="songIndex">—</div>
+            <div class="song-title no-song" id="songTitle">按下电源键开启收音机</div>
+            <div class="song-artist" id="songArtist"></div>
+        </div>
+
+        <div class="lyrics-section" id="lyricsSection">
+            <div class="lyrics-default" id="lyricsDefault">泥嚎，窝素示词器:）</div>
+            <div class="lyrics-content" id="lyricsContent">
+                <div class="lyrics-original" id="lyricsOriginal">原文歌词</div>
+                <div class="lyrics-translated" id="lyricsTranslated">译文歌词</div>
+            </div>
+        </div>
+
+        <div class="progress-container">
+            <div class="progress-time-row">
+                <span id="progressCurrent">00:00</span>
+                <span id="progressTotal">00:00</span>
+            </div>
+            <div class="progress-bar-outer">
+                <div class="progress-bar-inner" id="progressBar" style="width: 0%;"></div>
+            </div>
+        </div>
+
+        <div class="up-next" id="upNext">
+            <span class="up-next-icon">⏭</span>
+            <span class="up-next-info" id="upNextInfo">—</span>
+            <span class="up-next-time" id="upNextTime"></span>
+        </div>
+
+        <div class="listen-stats" id="listenStats">累计收听 0小时0分钟 · 本次 0小时0分钟</div>
+
+        <div class="controls-row">
+            <button class="btn-power" id="btnPower" title="开关收音机">📻</button>
+            <button class="btn-calibrate" id="btnCalibrate" title="手动校准到当前时间">⏱</button>
+            <button class="btn-timer" id="btnTimer" title="定时关闭">⏲</button>
+            <div class="volume-slider-container">
+                <span class="volume-icon">🔈</span>
+                <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="75" title="音量">
+                <span class="volume-value" id="volumeValue">75%</span>
+            </div>
+        </div>
+
+        <div class="timer-popup" id="timerPopup">
+            <button class="timer-option" data-minutes="15">15 分钟后关闭</button>
+            <button class="timer-option" data-minutes="30">30 分钟后关闭</button>
+            <button class="timer-option" data-minutes="60">60 分钟后关闭</button>
+            <button class="timer-option" data-minutes="120">120 分钟后关闭</button>
+            <div class="custom-timer-row">
+                <input type="number" class="custom-timer-input" id="customTimerInput" placeholder="分钟" min="1" max="1440">
+                <button class="custom-timer-btn" id="customTimerBtn">设定</button>
+            </div>
+            <button class="timer-option timer-cancel" id="timerCancelBtn">取消定时</button>
+        </div>
+
+        <div class="schedule-toggle" id="scheduleToggle">
+            📋 即将播放 <span class="schedule-arrow" id="scheduleArrow">▼</span>
+        </div>
+    </div>
+
+    <div class="schedule-table-wrapper" id="scheduleWrapper">
+        <table class="schedule-table" id="scheduleTable">
+            <thead>
+            <tr>
+                <th class="time-col">开始时间</th>
+                <th class="dur-col">时长</th>
+                <th class="title-col">歌曲</th>
+                <th class="artist-col">艺术家</th>
+            </tr>
+            </thead>
+            <tbody id="scheduleTbody">
+            <tr><td colspan="4" style="text-align:center;color:var(--text-secondary);">加载中...</td></tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<audio id="audioPlayer" preload="auto" style="display:none;"></audio>
+<div id="toastContainer"></div>
+
+<script>
     
     (function() {
         // ==================== 配置区 ====================
@@ -1144,6 +1770,8 @@
     })();
     
 </script>
+</body>
+</html>
       
     </div>
     <footer class="article-footer">
