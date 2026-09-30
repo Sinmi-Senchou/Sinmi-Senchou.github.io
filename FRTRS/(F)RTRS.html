@@ -684,7 +684,7 @@
         const MIRAGE_LYRICS_PATH_PREFIX = 'lyrics/M/';
         const APRIL_FOOLS_CODE = 114514;
         const RADIO_START = new Date(2026, 5, 2, 6, 0, 3); 
-        const APRIL_CHECK_INTERVAL = 30000; // 每 30 秒检查一次愚人节时间窗变化
+        const APRIL_CHECK_INTERVAL = 30000;
 
         const fullPlaylistData = [
             ["XL Project - Starmine.mp3", "04:40", "Starmine", "XL Project", 0],
@@ -845,6 +845,8 @@
         let aprilTracks = [];
         let playlist = [];
         let totalPlaylistDuration = 0;
+        // ★ 当前播放列表的基准时间（普通歌单 = RADIO_START，愚人节歌单 = 当天 00:00:00）
+        let currentPlaylistStartMs = RADIO_START.getTime();
         let isPoweredOn = false;
         let currentTrackIndex = -1;
         let currentTrackStartTime = null;
@@ -857,8 +859,8 @@
         let consecutiveSwitchCount = 0;
         let autoOffTimeoutId = null;
         let autoOffTargetTime = null;
+        // currentMode：'table' | 'inner' | 'mixed' | 'april'(114514 强制激活)
         let currentMode = 'table';
-
         let lastAprilWindowState = null;
 
         // ==================== 收听时长相关 ====================
@@ -866,15 +868,21 @@
         let sessionListenSeconds = 0;
         let listenTimerId = null;
 
+        // ==================== 愚人节判断与基准时间 ====================
         function isAprilFoolsWindow() {
             const now = new Date();
             return now.getMonth() === 3 && now.getDate() === 1;
         }
 
-        function getEffectiveMode() {
-            if (currentMode === 'april') return 'april';
-            if (currentMode === 'mixed' && isAprilFoolsWindow()) return 'april';
-            return currentMode;
+        // 愚人节歌单基准：今天 00:00:00（本地时间）
+        function getAprilFoolsStartMs() {
+            const now = new Date();
+            return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0).getTime();
+        }
+        function getPlaylistStartMs(mode) {
+            if (mode === 'april') return getAprilFoolsStartMs();
+            if (mode === 'mixed' && isAprilFoolsWindow()) return getAprilFoolsStartMs();
+            return RADIO_START.getTime();
         }
 
         // ==================== 主题切换 ====================
@@ -1003,7 +1011,7 @@
             }
         }
 
-        // ==================== 歌单构建与切换 ====================
+        // ==================== 歌单构建 ====================
         function buildAllTracks() {
             allTracks = fullPlaylistData.map(row => {
                 const filename = row[0] || '';
@@ -1040,12 +1048,8 @@
             return true;
         }
 
-        // ★ 核心：根据 mode 和愚人节窗口返回实际要播放的曲目
         function getFilteredPlaylist(mode) {
-            // 4月1日 00:00~23:59：混播模式自动替换为愚人节歌单
-            if (mode === 'mixed' && isAprilFoolsWindow()) {
-                return aprilTracks.slice();
-            }
+            if (mode === 'mixed' && isAprilFoolsWindow()) return aprilTracks.slice();
             if (mode === 'table') return allTracks.filter(t => t.type === 0);
             if (mode === 'inner') return allTracks.filter(t => t.type === 1);
             if (mode === 'mixed') return allTracks.slice();
@@ -1053,9 +1057,10 @@
             return [];
         }
 
-        function buildScheduleForPlaylist(list) {
+        function buildScheduleForPlaylist(list, startMs) {
+            currentPlaylistStartMs = startMs;
             totalPlaylistDuration = 0;
-            let currentStart = RADIO_START.getTime();
+            let currentStart = startMs;
             for (let i = 0; i < list.length; i++) {
                 list[i].startTime = currentStart;
                 list[i].endTime = currentStart + list[i].durationSec * 1000;
@@ -1066,17 +1071,17 @@
 
         function getPositionForTimestamp(timestampMs) {
             if (playlist.length === 0) return { trackIndex: -1, offsetSec: 0, actualStartMs: 0, actualEndMs: 0, pastEnd: true };
-            const radioStartMs = RADIO_START.getTime();
-            if (timestampMs < radioStartMs) {
+            const startMs = currentPlaylistStartMs;
+            if (timestampMs < startMs) {
                 return {
                     trackIndex: 0, offsetSec: 0,
-                    actualStartMs: radioStartMs,
-                    actualEndMs: radioStartMs + playlist[0].durationSec * 1000,
+                    actualStartMs: startMs,
+                    actualEndMs: startMs + playlist[0].durationSec * 1000,
                     beforeStart: true
                 };
             }
             const totalMs = totalPlaylistDuration * 1000;
-            let elapsedMs = timestampMs - radioStartMs;
+            let elapsedMs = timestampMs - startMs;
             let cycleNumber = 0;
             if (LOOP_PLAYLIST && totalMs > 0) {
                 cycleNumber = Math.floor(elapsedMs / totalMs);
@@ -1087,8 +1092,8 @@
             for (let i = 0; i < playlist.length; i++) {
                 const trackStart = playlist[i].startTime;
                 const trackEnd = playlist[i].endTime;
-                const relStart = trackStart - radioStartMs;
-                const relEnd = trackEnd - radioStartMs;
+                const relStart = trackStart - startMs;
+                const relEnd = trackEnd - startMs;
                 if (elapsedMs >= relStart && elapsedMs < relEnd) {
                     const offsetSec = (elapsedMs - relStart) / 1000;
                     const actualStartMs = trackStart + cycleNumber * totalMs;
@@ -1203,7 +1208,7 @@
                 showToast(`⚠️ 歌单为空`, true);
                 return;
             }
-            buildScheduleForPlaylist(playlist);
+            buildScheduleForPlaylist(playlist, getPlaylistStartMs(mode));
             if (isPoweredOn) {
                 const now = Date.now();
                 const pos = getPositionForTimestamp(now);
@@ -1248,7 +1253,7 @@
             }
             applyTheme('mixed');
             playlist = getFilteredPlaylist('mixed');
-            buildScheduleForPlaylist(playlist);
+            buildScheduleForPlaylist(playlist, getPlaylistStartMs('mixed'));
 
             if (isPoweredOn) {
                 const now = Date.now();
@@ -1462,7 +1467,7 @@
             stopListenTimer();
         }
 
-        // ==================== 其他UI更新函数 ====================
+        // ==================== 其他UI更新 ====================
         function updateNowPlayingDisplay() {
             if (currentTrackIndex < 0 || currentTrackIndex >= playlist.length) {
                 songTitle.textContent = '未选择歌曲';
@@ -1494,7 +1499,8 @@
                 nextStartMs = currentTrackEndTime;
             } else {
                 const totalMs = totalPlaylistDuration * 1000;
-                const cycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
+                // ★ 使用当前列表的基准时间
+                const cycle = totalMs > 0 ? Math.floor((now - currentPlaylistStartMs) / totalMs) : 0;
                 nextStartMs = nextTrack.startTime + (LOOP_PLAYLIST ? cycle * totalMs : 0);
                 if (nextStartMs < now) nextStartMs += totalMs;
             }
@@ -1510,7 +1516,8 @@
             const windowEnd = now + SCHEDULE_WINDOW_HOURS * 3600 * 1000;
             let rows = [];
             const totalMs = totalPlaylistDuration * 1000;
-            const startCycle = totalMs > 0 ? Math.floor((now - RADIO_START.getTime()) / totalMs) : 0;
+            // ★ 使用当前列表的基准时间
+            const startCycle = totalMs > 0 ? Math.floor((now - currentPlaylistStartMs) / totalMs) : 0;
             for (let cycle = startCycle; cycle <= startCycle + 1; cycle++) {
                 if (cycle < 0 || (!LOOP_PLAYLIST && cycle > 0)) continue;
                 for (let i = 0; i < playlist.length; i++) {
@@ -1641,7 +1648,6 @@
         btnPower.addEventListener('click', () => isPoweredOn ? powerOff() : powerOn());
         btnCalibrate.addEventListener('click', manualCalibrate);
 
-        // 三个模式按钮
         modeTableBtn.addEventListener('click', () => {
             if (currentMode === 'april') currentMode = 'table';
             if (currentMode !== 'table') switchMode('table');
@@ -1696,7 +1702,6 @@
             if (preloadAudio) { preloadAudio.src = ''; preloadAudio = null; }
         });
 
-        // 自定义定时器
         customTimerBtn.addEventListener('click', () => {
             const raw = (customTimerInput.value || '').trim();
             const val = parseInt(raw, 10);
@@ -1745,7 +1750,7 @@
         function init() {
             if (!buildAllTracks()) return;
             playlist = getFilteredPlaylist('table');
-            buildScheduleForPlaylist(playlist);
+            buildScheduleForPlaylist(playlist, getPlaylistStartMs('table'));
             applyTheme('table');
             currentMode = 'table';
             audioPlayer.volume = parseFloat(volumeSlider.value) / 100;
